@@ -16,7 +16,7 @@ class Settings(BaseSettings):
 
     # Auth / Sessions
     session_secret_key: str
-    access_token_expire_minutes: int = 30
+    session_expire_minutes: int = 30
 
     model_config = SettingsConfigDict(
         env_file=".env",
