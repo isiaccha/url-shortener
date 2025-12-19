@@ -12,7 +12,9 @@ sys.path.append(os.path.abspath("."))
 from src.core.config import settings
 from src.db.session import Base
 import src.models.user
-import src.models.oauth_account # make sure models are registered
+import src.models.oauth_account
+import src.models.link
+import src.models.click_event # make sure models are registered
 
 config = context.config
 fileConfig(config.config_file_name)
