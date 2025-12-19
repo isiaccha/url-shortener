@@ -1,5 +1,10 @@
 # Created by https://www.toptal.com/developers/gitignore/api/react,python
 # Edit at https://www.toptal.com/developers/gitignore?templates=react,python
+
+# Alembic cache
+alembic/__pycache__/
+alembic/**/*.pyc
+
 # Local SQLite DB files
 *.db
 *.sqlite

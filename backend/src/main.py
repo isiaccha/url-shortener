@@ -18,7 +18,6 @@ app.add_middleware(
     https_only=settings.app_env == "production",
 )
 
-Base.metadata.create_all(bind=engine)
 
 app.include_router(auth_router)
 

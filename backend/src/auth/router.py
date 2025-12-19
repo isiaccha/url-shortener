@@ -7,6 +7,7 @@ from src.core.config import settings
 from src.db.session import get_db
 from src.models.user import User
 from src.models.oauth_account import OAuthAccount
+from src.auth.dependencies import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -79,23 +80,15 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
 
 
 
+
 @router.get("/me")
-def me(request: Request, db: Session = Depends(get_db)):
-    user_id = request.session.get("user_id")
-    if not user_id:
-        return {"user": None}
-
-    user = db.query(User).filter_by(id=user_id).one_or_none()
-    if not user:
-        request.session.pop("user_id", None)
-        return {"user": None}
-
+def me(current_user: User = Depends(get_current_user)):
     return {
         "user": {
-            "id": user.id,
-            "email": user.email,
-            "display_name": user.display_name,
-            "avatar_url": user.avatar_url,
+            "id": current_user.id,
+            "email": current_user.email,
+            "display_name": current_user.display_name,
+            "avatar_url": current_user.avatar_url,
         }
     }
 
