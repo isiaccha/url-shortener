@@ -17,7 +17,7 @@ def redirect(slug: str, request: Request, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Link not found")
 
     try:
-        record_click(db, link=link)
+        record_click(db, link=link, request=request)
     except Exception:
         db.rollback()  # never block redirect due to analytics
 
