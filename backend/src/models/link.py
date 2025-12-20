@@ -32,9 +32,9 @@ class Link(Base):
         nullable=False,
     )
 
-    slug: Mapped[str] = mapped_column(
+    slug: Mapped[str | None] = mapped_column(
         String(32),
-        nullable=False,
+        nullable=True, # must be nullable with how we calculate the slug using id
     )
 
     target_url: Mapped[str] = mapped_column(

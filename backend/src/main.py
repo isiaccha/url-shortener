@@ -3,6 +3,8 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from src.core.config import settings
 from src.auth.router import router as auth_router
+from src.links.router import router as links_router
+from src.links.redirect_router import router as redirect_router
 from src.db.session import Base, engine
 
 import src.models.user
@@ -20,4 +22,5 @@ app.add_middleware(
 
 
 app.include_router(auth_router)
-
+app.include_router(links_router, prefix="/api")
+app.include_router(redirect_router)

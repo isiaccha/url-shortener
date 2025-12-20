@@ -1,8 +1,8 @@
-"""add links and click events
+"""baseline
 
-Revision ID: 8a269deba9a3
-Revises: d21cd2d4a9e3
-Create Date: 2025-12-19 13:17:17.831839
+Revision ID: 9b8986e3995b
+Revises: 
+Create Date: 2025-12-19 19:07:52.645033
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '8a269deba9a3'
-down_revision: Union[str, Sequence[str], None] = 'd21cd2d4a9e3'
+revision: str = '9b8986e3995b'
+down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -33,7 +33,7 @@ def upgrade() -> None:
     op.create_table('links',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('slug', sa.String(length=32), nullable=False),
+    sa.Column('slug', sa.String(length=32), nullable=True),
     sa.Column('target_url', sa.Text(), nullable=False),
     sa.Column('is_active', sa.Boolean(), server_default='true', nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
