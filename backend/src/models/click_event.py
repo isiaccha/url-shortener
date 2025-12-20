@@ -54,6 +54,37 @@ class ClickEvent(Base):
         nullable=True,
     )
 
+    # Parsed user agent fields
+    device_category: Mapped[str | None] = mapped_column(
+        String(20),  # mobile, tablet, desktop, bot
+        nullable=True,
+    )
+
+    browser_name: Mapped[str | None] = mapped_column(
+        String(50),  # Chrome, Firefox, Safari, etc.
+        nullable=True,
+    )
+
+    browser_version: Mapped[str | None] = mapped_column(
+        String(20),  # e.g., "120.0.0"
+        nullable=True,
+    )
+
+    os_name: Mapped[str | None] = mapped_column(
+        String(50),  # Windows, macOS, iOS, Android, Linux
+        nullable=True,
+    )
+
+    os_version: Mapped[str | None] = mapped_column(
+        String(20),  # e.g., "11", "17.0"
+        nullable=True,
+    )
+
+    engine: Mapped[str | None] = mapped_column(
+        String(20),  # Blink, Gecko, WebKit
+        nullable=True,
+    )
+
     # relationships
     link: Mapped["Link"] = relationship(back_populates="click_events")
 

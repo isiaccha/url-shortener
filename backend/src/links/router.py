@@ -96,6 +96,12 @@ def link_stats(
                 clicked_at=e.clicked_at,
                 referrer_host=getattr(e, "referrer_host", None),
                 country=getattr(e, "country", None),
+                device_category=getattr(e, "device_category", None),
+                browser_name=getattr(e, "browser_name", None),
+                browser_version=getattr(e, "browser_version", None),
+                os_name=getattr(e, "os_name", None),
+                os_version=getattr(e, "os_version", None),
+                engine=getattr(e, "engine", None),
             )
             for e in recent
         ],

@@ -13,6 +13,7 @@ from src.links.utils import (
     get_ua_raw,
     make_visitor_hash,
     get_country_from_ip,
+    parse_user_agent,
 )
 from src.models.link import Link
 from src.models.click_event import ClickEvent
@@ -50,6 +51,9 @@ def record_click(db: Session, *, link: Link, request: Request) -> None:
     # Look up country using raw IP (but don't store the IP itself)
     country = get_country_from_ip(ip)
     
+    # Parse user agent for structured data
+    parsed_ua = parse_user_agent(ua)
+    
     # Create click event with all analytics fields
     evt = ClickEvent(
         link_id=link.id,
@@ -57,6 +61,12 @@ def record_click(db: Session, *, link: Link, request: Request) -> None:
         ua_raw=ua,
         visitor_hash=visitor_hash,
         country=country,
+        device_category=parsed_ua["device_category"],
+        browser_name=parsed_ua["browser_name"],
+        browser_version=parsed_ua["browser_version"],
+        os_name=parsed_ua["os_name"],
+        os_version=parsed_ua["os_version"],
+        engine=parsed_ua["engine"],
     )
     db.add(evt)
 

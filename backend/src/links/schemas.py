@@ -38,6 +38,12 @@ class ClickEventItem(BaseModel):
     clicked_at: datetime
     referrer_host: str | None = None
     country: str | None = None
+    device_category: str | None = None
+    browser_name: str | None = None
+    browser_version: str | None = None
+    os_name: str | None = None
+    os_version: str | None = None
+    engine: str | None = None
 
     model_config = {"from_attributes": True}
 
