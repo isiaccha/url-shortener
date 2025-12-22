@@ -182,14 +182,14 @@ poetry.toml
 # LSP config files
 pyrightconfig.json
 
-### react ###
+### React/Node ###
+# Note: Frontend-specific patterns are in frontend/.gitignore
 .DS_*
-logs
 **/*.backup.*
 **/*.back.*
 
-node_modules
-bower_components
+# node_modules is handled by frontend/.gitignore
+# dist is handled by frontend/.gitignore
 
 *.sublime*
 
