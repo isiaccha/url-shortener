@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
 import type { ReactNode } from 'react'
 import { getCurrentUser, initiateGoogleLogin, logout as apiLogout } from '@/api'
 import type { User } from '@/types/api'
@@ -18,12 +18,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true) // Start with true to check auth on mount
 
-  // Check authentication status on mount
-  useEffect(() => {
-    checkAuth()
-  }, [])
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const currentUser = await getCurrentUser()
       setUser(currentUser)
@@ -36,13 +31,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const login = () => {
+  // Check authentication status on mount
+  useEffect(() => {
+    checkAuth()
+  }, [checkAuth])
+
+  const login = useCallback(() => {
     initiateGoogleLogin()
-  }
+  }, [])
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await apiLogout()
       setUser(null)
@@ -51,16 +51,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Clear user state even if API call fails
       setUser(null)
     }
-  }
+  }, [])
 
-  const value: AuthContextType = {
-    user,
-    loading,
-    isAuthenticated: !!user,
-    login,
-    logout,
-    checkAuth,
-  }
+  const value: AuthContextType = useMemo(
+    () => ({
+      user,
+      loading,
+      isAuthenticated: !!user,
+      login,
+      logout,
+      checkAuth,
+    }),
+    [user, loading, login, logout, checkAuth]
+  )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

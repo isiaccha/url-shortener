@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts'
 
@@ -7,8 +7,13 @@ export default function AuthCallback() {
   const { checkAuth, user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const hasHandledCallback = useRef(false)
 
   useEffect(() => {
+    // Prevent running multiple times (e.g., in React StrictMode)
+    if (hasHandledCallback.current) return
+    hasHandledCallback.current = true
+
     const handleCallback = async () => {
       const urlParams = new URLSearchParams(window.location.search)
       const success = urlParams.get('success')
@@ -18,17 +23,12 @@ export default function AuthCallback() {
         try {
           await checkAuth()
           console.log('✅ Login successful')
-          
-          // Redirect to home after a short delay
-          setTimeout(() => {
-            navigate('/')
-          }, 2000)
+          setLoading(false)
         } catch (err: any) {
           const errorMsg = err.response?.data?.detail || err.message || 'Failed to verify login'
           setError(errorMsg)
-          console.error('❌ Failed to verify login:', err)
-        } finally {
           setLoading(false)
+          console.error('❌ Failed to verify login:', err)
         }
       } else {
         // No success parameter, might be an error
@@ -38,8 +38,31 @@ export default function AuthCallback() {
     }
 
     handleCallback()
-  }, [navigate, checkAuth])
+  }, [checkAuth])
 
+  // Redirect when auth is successful (user is set and not loading)
+  useEffect(() => {
+    if (!loading && !error && user) {
+      const redirectTimeout = setTimeout(() => {
+        console.log('Redirecting to home...')
+        navigate('/', { replace: true })
+      }, 1500)
+      
+      return () => clearTimeout(redirectTimeout)
+    }
+    
+    // Fallback: if checkAuth succeeded but user not set yet, redirect anyway after a delay
+    if (!loading && !error && !user) {
+      const redirectTimeout = setTimeout(() => {
+        console.log('Redirecting to home (fallback)...')
+        navigate('/', { replace: true })
+      }, 2000)
+      
+      return () => clearTimeout(redirectTimeout)
+    }
+  }, [loading, error, user, navigate])
+
+  // Show loading state
   if (loading) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
@@ -49,13 +72,14 @@ export default function AuthCallback() {
     )
   }
 
+  // Show error state
   if (error) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
         <h2>Authentication Error</h2>
         <p style={{ color: '#c62828' }}>{error}</p>
         <button 
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/', { replace: true })}
           style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}
         >
           Go to Home
@@ -64,6 +88,7 @@ export default function AuthCallback() {
     )
   }
 
+  // Show success state (user should be set after checkAuth succeeds)
   if (user) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
@@ -74,6 +99,11 @@ export default function AuthCallback() {
     )
   }
 
-  return null
+  // Fallback: processing state
+  return (
+    <div style={{ padding: '2rem', textAlign: 'center' }}>
+      <p>Processing authentication...</p>
+    </div>
+  )
 }
 

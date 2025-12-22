@@ -1,33 +1,24 @@
-import { useState, useEffect } from 'react'
-import { getCurrentUser, getLinks, createLink, initiateGoogleLogin, logout } from '@/api'
-import type { User, LinkListItem } from '@/types/api'
+import { useState } from 'react'
+import { getCurrentUser, getLinks, createLink } from '@/api'
+import { useAuth } from '@/contexts'
+import type { LinkListItem } from '@/types/api'
 
 export default function ApiTest() {
+  const { user, login, logout, checkAuth } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [user, setUser] = useState<User | null>(null)
   const [links, setLinks] = useState<LinkListItem[]>([])
   const [testUrl, setTestUrl] = useState('https://example.com')
-
-  // Check auth status on mount
-  useEffect(() => {
-    checkAuthStatus()
-  }, [])
 
   const checkAuthStatus = async () => {
     setLoading(true)
     setError(null)
     try {
-      const currentUser = await getCurrentUser()
-      setUser(currentUser)
-      console.log('✅ User is authenticated:', currentUser)
+      await checkAuth()
+      console.log('✅ Auth status refreshed')
     } catch (err: any) {
-      // 401 is expected if not logged in, so we don't show it as an error
-      if (err.response?.status !== 401) {
-        const errorMsg = err.response?.data?.detail || err.message || 'Unknown error'
-        setError(errorMsg)
-      }
-      setUser(null)
+      const errorMsg = err.response?.data?.detail || err.message || 'Unknown error'
+      setError(errorMsg)
     } finally {
       setLoading(false)
     }
@@ -35,7 +26,7 @@ export default function ApiTest() {
 
   const handleLogin = () => {
     console.log('🔐 Initiating Google OAuth login...')
-    initiateGoogleLogin()
+    login()
   }
 
   const handleLogout = async () => {
@@ -43,7 +34,6 @@ export default function ApiTest() {
     setError(null)
     try {
       await logout()
-      setUser(null)
       setLinks([])
       console.log('✅ Logged out successfully')
     } catch (err: any) {
@@ -60,7 +50,7 @@ export default function ApiTest() {
     setError(null)
     try {
       const currentUser = await getCurrentUser()
-      setUser(currentUser)
+      await checkAuth() // Update context with the result
       console.log('✅ getCurrentUser success:', currentUser)
     } catch (err: any) {
       const errorMsg = err.response?.data?.detail || err.message || 'Unknown error'
