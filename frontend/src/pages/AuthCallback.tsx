@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getCurrentUser } from '@/api'
-import type { User } from '@/types/api'
+import { useAuth } from '@/contexts'
 
 export default function AuthCallback() {
   const navigate = useNavigate()
+  const { checkAuth, user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -15,11 +14,10 @@ export default function AuthCallback() {
       const success = urlParams.get('success')
 
       if (success === 'true') {
-        // OAuth callback successful, verify user session
+        // OAuth callback successful, verify user session using context
         try {
-          const currentUser = await getCurrentUser()
-          setUser(currentUser)
-          console.log('✅ Login successful:', currentUser)
+          await checkAuth()
+          console.log('✅ Login successful')
           
           // Redirect to home after a short delay
           setTimeout(() => {
@@ -40,7 +38,7 @@ export default function AuthCallback() {
     }
 
     handleCallback()
-  }, [navigate])
+  }, [navigate, checkAuth])
 
   if (loading) {
     return (
