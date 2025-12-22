@@ -67,18 +67,8 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
     # 3) Create YOUR app session
     request.session["user_id"] = user.id
 
-    # 4) Redirect back to frontend (or return JSON for now)
-    return {
-        "message": "login successful",
-        "user": {
-            "id": user.id,
-            "email": user.email,
-            "display_name": user.display_name,
-            "avatar_url": user.avatar_url,
-        }
-    }
-
-
+    # 4) Redirect back to frontend
+    return RedirectResponse(url=f"{settings.frontend_url}/auth/callback?success=true")
 
 
 @router.get("/me")

@@ -16,10 +16,23 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8000',
         changeOrigin: true,
+        secure: false,
       },
-      '/auth': {
+      // Proxy backend auth routes (not frontend routes like /auth/callback)
+      '/auth/google': {
         target: 'http://localhost:8000',
         changeOrigin: true,
+        secure: false,
+      },
+      '/auth/me': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/auth/logout': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
       },
     },
   },

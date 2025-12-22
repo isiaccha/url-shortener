@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from src.core.config import settings
@@ -12,11 +13,27 @@ import src.models.oauth_account
 
 app = FastAPI(debug=settings.debug)
 
+# CORS middleware - must be added before SessionMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
+        "http://127.0.0.1:5175",
+    ],
+    allow_credentials=True,  # Required for session cookies
+    allow_methods=["*"],  # Allow all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
+
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.session_secret_key,
     max_age=settings.session_expire_minutes * 60,
-    same_site="lax",
+    same_site="lax",  # "lax" allows cookies on top-level navigations (like OAuth redirects)
     https_only=settings.app_env == "production",
 )
 

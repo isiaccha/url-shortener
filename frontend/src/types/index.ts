@@ -1,2 +1,3 @@
-// TypeScript types and interfaces will be defined here
+// TypeScript types and interfaces
+export * from './api'
 
