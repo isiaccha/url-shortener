@@ -121,11 +121,43 @@ function DashboardContent() {
   // Mock data
   const kpis = generateMockKPIs()
   const countries = generateMockCountries()
-  const links = generateMockLinks()
+  
+  // Manage links state so we can update them
+  const [links, setLinks] = useState(() => generateMockLinks())
+  
+  // Filter out deleted links from display
+  const visibleLinks = links.filter(link => !link.deleted)
+  
   const totalClicks = countries.reduce((sum, c) => sum + c.clicks, 0)
 
   const handleLinkClick = (linkId: number) => {
     navigate(`/links/${linkId}/stats`)
+  }
+
+  const handleActivate = (linkId: number) => {
+    setLinks(prevLinks =>
+      prevLinks.map(link =>
+        link.id === linkId ? { ...link, status: 'active' as const } : link
+      )
+    )
+  }
+
+  const handleDeactivate = (linkId: number) => {
+    setLinks(prevLinks =>
+      prevLinks.map(link =>
+        link.id === linkId ? { ...link, status: 'inactive' as const } : link
+      )
+    )
+  }
+
+  const handleDelete = (linkId: number) => {
+    // Soft delete - only mark as deleted, don't remove from array
+    // This simulates removing from user view but keeping in DB
+    setLinks(prevLinks =>
+      prevLinks.map(link =>
+        link.id === linkId ? { ...link, deleted: true } : link
+      )
+    )
   }
 
   return (
@@ -161,7 +193,13 @@ function DashboardContent() {
       <CountryMapCard countries={countries} totalClicks={totalClicks} topCount={3} />
 
       {/* Links Table */}
-      <LinksTable links={links} onRowClick={handleLinkClick} />
+      <LinksTable 
+        links={visibleLinks} 
+        onRowClick={handleLinkClick}
+        onActivate={handleActivate}
+        onDeactivate={handleDeactivate}
+        onDelete={handleDelete}
+      />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import type { LinkTableRow } from '@/types/analytics'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -6,14 +6,26 @@ interface LinksTableProps {
   links: LinkTableRow[]
   loading?: boolean
   onRowClick?: (linkId: number) => void
+  onActivate?: (linkId: number) => void
+  onDeactivate?: (linkId: number) => void
+  onDelete?: (linkId: number) => void
 }
 
 type SortField = 'clicks' | 'lastClicked'
 type SortOrder = 'asc' | 'desc'
 
-export default function LinksTable({ links, loading = false, onRowClick }: LinksTableProps) {
+export default function LinksTable({ 
+  links, 
+  loading = false, 
+  onRowClick,
+  onActivate,
+  onDeactivate,
+  onDelete,
+}: LinksTableProps) {
   const [sortBy, setSortBy] = useState<SortField | null>('clicks')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null)
+  const menuRefs = useRef<Record<number, HTMLDivElement | null>>({})
 
   const handleSort = (field: SortField) => {
     if (sortBy === field) {
@@ -50,6 +62,23 @@ export default function LinksTable({ links, loading = false, onRowClick }: Links
     })
   }, [links, sortBy, sortOrder])
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (openMenuId !== null) {
+        const menuElement = menuRefs.current[openMenuId]
+        if (menuElement && !menuElement.contains(event.target as Node)) {
+          setOpenMenuId(null)
+        }
+      }
+    }
+
+    if (openMenuId !== null) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [openMenuId])
+
   const formatDate = (dateString: string | null): string => {
     if (!dateString) return 'Never'
     try {
@@ -62,6 +91,35 @@ export default function LinksTable({ links, loading = false, onRowClick }: Links
   const truncateUrl = (url: string, maxLength: number = 50): string => {
     if (url.length <= maxLength) return url
     return url.substring(0, maxLength) + '...'
+  }
+
+  const handleMenuToggle = (linkId: number, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setOpenMenuId(openMenuId === linkId ? null : linkId)
+  }
+
+  const handleActivate = (linkId: number, e: React.MouseEvent) => {
+    e.stopPropagation()
+    onActivate?.(linkId)
+    setOpenMenuId(null)
+  }
+
+  const handleDeactivate = (linkId: number, e: React.MouseEvent) => {
+    e.stopPropagation()
+    onDeactivate?.(linkId)
+    setOpenMenuId(null)
+  }
+
+  const handleDelete = (linkId: number, e: React.MouseEvent) => {
+    e.stopPropagation()
+    onDelete?.(linkId)
+    setOpenMenuId(null)
+  }
+
+  const handleViewDetails = (linkId: number, e: React.MouseEvent) => {
+    e.stopPropagation()
+    onRowClick?.(linkId)
+    setOpenMenuId(null)
   }
 
   if (loading) {
@@ -120,7 +178,7 @@ export default function LinksTable({ links, loading = false, onRowClick }: Links
           <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
             <th style={{ 
               textAlign: 'left', 
-              padding: '0.75rem 0.5rem',
+              padding: '0.75rem 1rem',
               fontSize: '0.75rem',
               fontWeight: '600',
               color: '#6b7280',
@@ -131,7 +189,7 @@ export default function LinksTable({ links, loading = false, onRowClick }: Links
             </th>
             <th style={{ 
               textAlign: 'left', 
-              padding: '0.75rem 0.5rem',
+              padding: '0.75rem 1rem',
               fontSize: '0.75rem',
               fontWeight: '600',
               color: '#6b7280',
@@ -141,8 +199,8 @@ export default function LinksTable({ links, loading = false, onRowClick }: Links
               Long URL
             </th>
             <th style={{ 
-              textAlign: 'left', 
-              padding: '0.75rem 0.5rem',
+              textAlign: 'center', 
+              padding: '0.75rem 1rem',
               fontSize: '0.75rem',
               fontWeight: '600',
               color: '#6b7280',
@@ -153,8 +211,8 @@ export default function LinksTable({ links, loading = false, onRowClick }: Links
             </th>
             <th 
               style={{ 
-                textAlign: 'right', 
-                padding: '0.75rem 0.5rem',
+                textAlign: 'center', 
+                padding: '0.75rem 1rem',
                 fontSize: '0.75rem',
                 fontWeight: '600',
                 color: '#6b7280',
@@ -168,8 +226,8 @@ export default function LinksTable({ links, loading = false, onRowClick }: Links
               Clicks {sortBy === 'clicks' && (sortOrder === 'asc' ? '↑' : '↓')}
             </th>
             <th style={{ 
-              textAlign: 'right', 
-              padding: '0.75rem 0.5rem',
+              textAlign: 'center', 
+              padding: '0.75rem 1rem',
               fontSize: '0.75rem',
               fontWeight: '600',
               color: '#6b7280',
@@ -181,7 +239,7 @@ export default function LinksTable({ links, loading = false, onRowClick }: Links
             <th 
               style={{ 
                 textAlign: 'left', 
-                padding: '0.75rem 0.5rem',
+                padding: '0.75rem 1rem',
                 fontSize: '0.75rem',
                 fontWeight: '600',
                 color: '#6b7280',
@@ -196,7 +254,7 @@ export default function LinksTable({ links, loading = false, onRowClick }: Links
             </th>
             <th style={{ 
               textAlign: 'left', 
-              padding: '0.75rem 0.5rem',
+              padding: '0.75rem 1rem',
               fontSize: '0.75rem',
               fontWeight: '600',
               color: '#6b7280',
@@ -204,6 +262,18 @@ export default function LinksTable({ links, loading = false, onRowClick }: Links
               letterSpacing: '0.05em',
             }}>
               Created
+            </th>
+            <th style={{ 
+              textAlign: 'center', 
+              padding: '0.75rem 1rem',
+              fontSize: '0.75rem',
+              fontWeight: '600',
+              color: '#6b7280',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              width: '50px',
+            }}>
+              {/* Actions column header */}
             </th>
           </tr>
         </thead>
@@ -226,7 +296,7 @@ export default function LinksTable({ links, loading = false, onRowClick }: Links
                 e.currentTarget.style.backgroundColor = 'transparent'
               }}
             >
-              <td style={{ padding: '0.75rem 0.5rem', fontSize: '0.875rem' }}>
+              <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem' }}>
                 <a
                   href={link.shortUrl}
                   onClick={(e) => e.stopPropagation()}
@@ -241,12 +311,12 @@ export default function LinksTable({ links, loading = false, onRowClick }: Links
                   {link.shortUrl}
                 </a>
               </td>
-              <td style={{ padding: '0.75rem 0.5rem', fontSize: '0.875rem', color: '#6b7280', maxWidth: '300px' }}>
+              <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#6b7280', maxWidth: '300px' }}>
                 <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={link.longUrl}>
                   {truncateUrl(link.longUrl, 50)}
                 </div>
               </td>
-              <td style={{ padding: '0.75rem 0.5rem' }}>
+              <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
                 <span style={{
                   display: 'inline-block',
                   padding: '0.25rem 0.75rem',
@@ -259,17 +329,180 @@ export default function LinksTable({ links, loading = false, onRowClick }: Links
                   {link.status === 'active' ? 'Active' : 'Inactive'}
                 </span>
               </td>
-              <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right', fontSize: '0.875rem', fontWeight: '500' }}>
+              <td style={{ padding: '0.75rem 1rem', textAlign: 'center', fontSize: '0.875rem', fontWeight: '500' }}>
                 {link.clicks.toLocaleString()}
               </td>
-              <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right', fontSize: '0.875rem', color: '#6b7280' }}>
+              <td style={{ padding: '0.75rem 1rem', textAlign: 'center', fontSize: '0.875rem', color: '#6b7280' }}>
                 {link.uniqueVisitors.toLocaleString()}
               </td>
-              <td style={{ padding: '0.75rem 0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
+              <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#6b7280' }}>
                 {formatDate(link.lastClicked)}
               </td>
-              <td style={{ padding: '0.75rem 0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
+              <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#6b7280' }}>
                 {formatDate(link.created)}
+              </td>
+              <td 
+                style={{ 
+                  padding: '0.75rem 1rem', 
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={(e) => handleMenuToggle(link.id, e)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '0.25rem',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#6b7280',
+                    fontSize: '1.25rem',
+                    lineHeight: 1,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f3f4f6'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                  }}
+                >
+                  ⋮
+                </button>
+                
+                {openMenuId === link.id && (
+                  <div
+                    ref={(el) => (menuRefs.current[link.id] = el)}
+                    style={{
+                      position: 'absolute',
+                      right: '0.5rem',
+                      top: '100%',
+                      marginTop: '0.25rem',
+                      background: 'white',
+                      borderRadius: '6px',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                      border: '1px solid #e5e7eb',
+                      zIndex: 1000,
+                      minWidth: '160px',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <button
+                      onClick={(e) => handleViewDetails(link.id, e)}
+                      style={{
+                        width: '100%',
+                        textAlign: 'left',
+                        padding: '0.75rem 1rem',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                        color: '#111827',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f9fafb'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                      }}
+                    >
+                      <span>👁️</span>
+                      <span>View Details</span>
+                    </button>
+                    
+                    {link.status === 'active' ? (
+                      <button
+                        onClick={(e) => handleDeactivate(link.id, e)}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '0.75rem 1rem',
+                          background: 'none',
+                          border: 'none',
+                          borderTop: '1px solid #e5e7eb',
+                          cursor: 'pointer',
+                          fontSize: '0.875rem',
+                          color: '#111827',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f9fafb'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent'
+                        }}
+                      >
+                        <span>⏸️</span>
+                        <span>Deactivate</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={(e) => handleActivate(link.id, e)}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '0.75rem 1rem',
+                          background: 'none',
+                          border: 'none',
+                          borderTop: '1px solid #e5e7eb',
+                          cursor: 'pointer',
+                          fontSize: '0.875rem',
+                          color: '#111827',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f9fafb'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent'
+                        }}
+                      >
+                        <span>▶️</span>
+                        <span>Activate</span>
+                      </button>
+                    )}
+                    
+                    {link.status === 'inactive' && (
+                      <button
+                        onClick={(e) => handleDelete(link.id, e)}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '0.75rem 1rem',
+                          background: 'none',
+                          border: 'none',
+                          borderTop: '1px solid #e5e7eb',
+                          cursor: 'pointer',
+                          fontSize: '0.875rem',
+                          color: '#dc2626',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#fef2f2'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent'
+                        }}
+                      >
+                        <span>🗑️</span>
+                        <span>Delete</span>
+                      </button>
+                    )}
+                  </div>
+                )}
               </td>
             </tr>
           ))}
