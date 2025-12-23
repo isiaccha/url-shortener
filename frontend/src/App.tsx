@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts'
-import { Login, AuthCallback } from './pages'
+import { Login, AuthCallback, Dashboard } from './pages'
 import { ProtectedRoute } from './components'
 import ApiTest from './components/ApiTest'
 
@@ -19,18 +19,7 @@ function App() {
             } />
             <Route path="/login" element={<Login />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
-            {/* Example of a protected route - will be used for dashboard later */}
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute>
-                  <div>
-                    <h1>Dashboard</h1>
-                    <p>This is a protected route - you must be logged in to see this.</p>
-                  </div>
-                </ProtectedRoute>
-              } 
-            />
+            <Route path="/dashboard" element={<Dashboard />} />
           </Routes>
         </div>
       </BrowserRouter>
