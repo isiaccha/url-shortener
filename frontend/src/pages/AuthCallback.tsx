@@ -22,13 +22,11 @@ export default function AuthCallback() {
         // OAuth callback successful, verify user session using context
         try {
           await checkAuth()
-          console.log('✅ Login successful')
           setLoading(false)
         } catch (err: any) {
           const errorMsg = err.response?.data?.detail || err.message || 'Failed to verify login'
           setError(errorMsg)
           setLoading(false)
-          console.error('❌ Failed to verify login:', err)
         }
       } else {
         // No success parameter, might be an error
@@ -44,7 +42,6 @@ export default function AuthCallback() {
   useEffect(() => {
     if (!loading && !error && user) {
       const redirectTimeout = setTimeout(() => {
-        console.log('Redirecting to home...')
         navigate('/', { replace: true })
       }, 1500)
       
@@ -54,7 +51,6 @@ export default function AuthCallback() {
     // Fallback: if checkAuth succeeded but user not set yet, redirect anyway after a delay
     if (!loading && !error && !user) {
       const redirectTimeout = setTimeout(() => {
-        console.log('Redirecting to home (fallback)...')
         navigate('/', { replace: true })
       }, 2000)
       

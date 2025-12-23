@@ -158,7 +158,7 @@ function DashboardContent() {
       <KPICardsRow kpis={kpis} />
 
       {/* Country Map Card */}
-      <CountryMapCard countries={countries} totalClicks={totalClicks} topCount={5} />
+      <CountryMapCard countries={countries} totalClicks={totalClicks} topCount={3} />
 
       {/* Links Table */}
       <LinksTable links={links} onRowClick={handleLinkClick} />
