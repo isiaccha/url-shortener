@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ProtectedRoute } from '@/components'
+import { ProtectedRoute, Navbar } from '@/components'
+import { useTheme } from '@/contexts'
 import KPICardsRow from '@/components/dashboard/KPICardsRow'
 import CountryMapCard from '@/components/dashboard/CountryMapCard'
 import LinksTable from '@/components/dashboard/LinksTable'
@@ -112,11 +113,16 @@ const generateMockLinks = (): LinkTableRow[] => {
 
 function DashboardContent() {
   const navigate = useNavigate()
+  const { theme } = useTheme()
   const [dateRange, setDateRange] = useState<DateRange>({
     start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
     end: new Date(),
     preset: '7d',
   })
+
+  const bgColor = theme === 'dark' ? '#111827' : '#f9fafb'
+  const textColor = theme === 'dark' ? '#f9fafb' : '#111827'
+  const textSecondary = theme === 'dark' ? '#d1d5db' : '#6b7280'
 
   // Mock data
   const kpis = generateMockKPIs()
@@ -162,26 +168,31 @@ function DashboardContent() {
 
   return (
     <div style={{
-      maxWidth: '1400px',
-      margin: '0 auto',
-      padding: '2rem 1rem',
       minHeight: '100vh',
-      background: '#f9fafb',
+      background: bgColor,
+      color: textColor,
+      transition: 'background-color 0.3s ease, color 0.3s ease',
     }}>
-      {/* Header */}
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ 
-          fontSize: '1.875rem', 
-          fontWeight: 'bold', 
-          color: '#111827',
-          marginBottom: '0.5rem',
-        }}>
-          Analytics Dashboard
-        </h1>
-        <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
-          Monitor your link performance and traffic insights
-        </p>
-      </div>
+      <Navbar />
+      <div style={{
+        maxWidth: '1400px',
+        margin: '0 auto',
+        padding: '2rem 1rem',
+      }}>
+        {/* Header */}
+        <div style={{ marginBottom: '2rem' }}>
+          <h1 style={{ 
+            fontSize: '1.875rem', 
+            fontWeight: 'bold', 
+            color: textColor,
+            marginBottom: '0.5rem',
+          }}>
+            Analytics Dashboard
+          </h1>
+          <p style={{ color: textSecondary, fontSize: '0.875rem' }}>
+            Monitor your link performance and traffic insights
+          </p>
+        </div>
 
       {/* Date Range Selector */}
       <DateRangeSelector value={dateRange} onChange={setDateRange} />
@@ -200,6 +211,7 @@ function DashboardContent() {
         onDeactivate={handleDeactivate}
         onDelete={handleDelete}
       />
+      </div>
     </div>
   )
 }

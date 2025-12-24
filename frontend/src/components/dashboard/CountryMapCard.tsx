@@ -1,5 +1,6 @@
 import type { CountryData } from '@/types/analytics'
 import { WorldMap } from '../charts/WorldMap'
+import { useTheme } from '@/contexts'
 
 interface CountryMapCardProps {
   countries: CountryData[]
@@ -34,10 +35,16 @@ const COUNTRY_NAMES: Record<string, string> = {
 }
 
 export default function CountryMapCard({ countries, totalClicks, loading = false, topCount = 3 }: CountryMapCardProps) {
+  const { theme } = useTheme()
+  const bgColor = theme === 'dark' ? '#1f2937' : '#ffffff'
+  const textColor = theme === 'dark' ? '#f9fafb' : '#111827'
+  const textSecondary = theme === 'dark' ? '#d1d5db' : '#6b7280'
+  const borderColor = theme === 'dark' ? '#374151' : '#e5e7eb'
+
   if (loading) {
     return (
       <div style={{
-        background: 'white',
+        background: bgColor,
         borderRadius: '8px',
         padding: '2rem',
         boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
@@ -45,8 +52,9 @@ export default function CountryMapCard({ countries, totalClicks, loading = false
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        transition: 'background-color 0.3s ease',
       }}>
-        <p style={{ color: '#6b7280' }}>Loading country data...</p>
+        <p style={{ color: textSecondary }}>Loading country data...</p>
       </div>
     )
   }
@@ -54,7 +62,7 @@ export default function CountryMapCard({ countries, totalClicks, loading = false
   if (!countries || countries.length === 0) {
     return (
       <div style={{
-        background: 'white',
+        background: bgColor,
         borderRadius: '8px',
         padding: '2rem',
         boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
@@ -63,9 +71,10 @@ export default function CountryMapCard({ countries, totalClicks, loading = false
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
+        transition: 'background-color 0.3s ease',
       }}>
-        <p style={{ color: '#6b7280', marginBottom: '0.5rem' }}>No country data available</p>
-        <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>Clicks will appear here once you have traffic</p>
+        <p style={{ color: textSecondary, marginBottom: '0.5rem' }}>No country data available</p>
+        <p style={{ color: theme === 'dark' ? '#9ca3af' : '#9ca3af', fontSize: '0.875rem' }}>Clicks will appear here once you have traffic</p>
       </div>
     )
   }
@@ -74,16 +83,17 @@ export default function CountryMapCard({ countries, totalClicks, loading = false
 
   return (
     <div style={{
-      background: 'white',
+      background: bgColor,
       borderRadius: '8px',
       padding: '1.5rem',
       boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
       marginBottom: '1.5rem',
+      transition: 'background-color 0.3s ease',
     }}>
       <h3 style={{ 
         fontSize: '1.125rem', 
         fontWeight: '600', 
-        color: '#111827',
+        color: textColor,
         marginTop: 0,
         marginBottom: '1.5rem'
       }}>
@@ -97,8 +107,9 @@ export default function CountryMapCard({ countries, totalClicks, loading = false
         height: '500px', // Increased height to fill more space
         borderRadius: '6px',
         overflow: 'hidden',
-        border: '1px solid #e5e7eb',
-        background: '#f9fafb',
+        border: `1px solid ${borderColor}`,
+        background: theme === 'dark' ? '#111827' : '#f9fafb',
+        transition: 'background-color 0.3s ease, border-color 0.3s ease',
       }}>
         {/* World Map - fills entire container */}
         <WorldMap countries={countries} totalClicks={totalClicks} />
@@ -108,18 +119,19 @@ export default function CountryMapCard({ countries, totalClicks, loading = false
           position: 'absolute',
           top: '1rem',
           right: '1rem',
-          background: 'rgba(255, 255, 255, 0.95)',
+          background: theme === 'dark' ? 'rgba(31, 41, 55, 0.95)' : 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(8px)',
           borderRadius: '6px',
           padding: '0.5rem 0.75rem',
           boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
           minWidth: '240px',
           maxWidth: '280px',
+          transition: 'background-color 0.3s ease',
         }}>
           <h4 style={{ 
             fontSize: '0.875rem', 
             fontWeight: '600', 
-            color: '#111827',
+            color: textColor,
             marginTop: 0,
             marginBottom: '0.75rem'
           }}>
@@ -139,7 +151,7 @@ export default function CountryMapCard({ countries, totalClicks, loading = false
                 <div style={{
                   width: '20px',
                   fontSize: '0.75rem',
-                  color: '#6b7280',
+                  color: textSecondary,
                   fontWeight: '500',
                   textAlign: 'center',
                   flexShrink: 0,
@@ -151,13 +163,13 @@ export default function CountryMapCard({ countries, totalClicks, loading = false
                 <div style={{
                   width: '28px',
                   height: '20px',
-                  background: '#e5e7eb',
+                  background: borderColor,
                   borderRadius: '4px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '0.7rem',
-                  color: '#6b7280',
+                  color: textSecondary,
                   flexShrink: 0,
                 }}>
                   {country.countryCode}
@@ -167,7 +179,7 @@ export default function CountryMapCard({ countries, totalClicks, loading = false
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ 
                     fontSize: '0.875rem', 
-                    color: '#111827',
+                    color: textColor,
                     fontWeight: '500',
                     marginBottom: '0.25rem',
                     overflow: 'hidden',
@@ -178,7 +190,7 @@ export default function CountryMapCard({ countries, totalClicks, loading = false
                   </div>
                   <div style={{ 
                     fontSize: '0.75rem', 
-                    color: '#6b7280',
+                    color: textSecondary,
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',

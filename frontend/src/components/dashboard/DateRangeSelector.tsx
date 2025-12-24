@@ -1,4 +1,5 @@
 import type { DateRange, DateRangePreset } from '@/types/analytics'
+import { useTheme } from '@/contexts'
 
 interface DateRangeSelectorProps {
   value: DateRange
@@ -14,6 +15,14 @@ const PRESETS: { value: DateRangePreset; label: string }[] = [
 ]
 
 export default function DateRangeSelector({ value, onChange }: DateRangeSelectorProps) {
+  const { theme } = useTheme()
+  const textSecondary = theme === 'dark' ? '#d1d5db' : '#6b7280'
+  const bgColor = theme === 'dark' ? '#1f2937' : '#ffffff'
+  const borderColor = theme === 'dark' ? '#374151' : '#d1d5db'
+  const hoverBg = theme === 'dark' ? '#374151' : '#f9fafb'
+  const hoverBorder = theme === 'dark' ? '#4b5563' : '#9ca3af'
+  const textColor = theme === 'dark' ? '#f9fafb' : '#374151'
+
   const handlePresetClick = (preset: DateRangePreset) => {
     const now = new Date()
     let start = new Date()
@@ -52,7 +61,7 @@ export default function DateRangeSelector({ value, onChange }: DateRangeSelector
       alignItems: 'center',
       marginBottom: '1.5rem',
     }}>
-      <span style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>
+      <span style={{ fontSize: '0.875rem', color: textSecondary, fontWeight: '500' }}>
         Date Range:
       </span>
       {PRESETS.map((preset) => (
@@ -67,20 +76,20 @@ export default function DateRangeSelector({ value, onChange }: DateRangeSelector
             border: '1px solid',
             cursor: 'pointer',
             transition: 'all 0.15s ease',
-            background: value.preset === preset.value ? '#3b82f6' : 'white',
-            color: value.preset === preset.value ? 'white' : '#374151',
-            borderColor: value.preset === preset.value ? '#3b82f6' : '#d1d5db',
+            background: value.preset === preset.value ? '#3b82f6' : bgColor,
+            color: value.preset === preset.value ? 'white' : textColor,
+            borderColor: value.preset === preset.value ? '#3b82f6' : borderColor,
           }}
           onMouseEnter={(e) => {
             if (value.preset !== preset.value) {
-              e.currentTarget.style.borderColor = '#9ca3af'
-              e.currentTarget.style.background = '#f9fafb'
+              e.currentTarget.style.borderColor = hoverBorder
+              e.currentTarget.style.background = hoverBg
             }
           }}
           onMouseLeave={(e) => {
             if (value.preset !== preset.value) {
-              e.currentTarget.style.borderColor = '#d1d5db'
-              e.currentTarget.style.background = 'white'
+              e.currentTarget.style.borderColor = borderColor
+              e.currentTarget.style.background = bgColor
             }
           }}
         >
@@ -88,7 +97,7 @@ export default function DateRangeSelector({ value, onChange }: DateRangeSelector
         </button>
       ))}
       {value.preset === 'custom' && (
-        <div style={{ fontSize: '0.875rem', color: '#6b7280', marginLeft: '0.5rem' }}>
+        <div style={{ fontSize: '0.875rem', color: textSecondary, marginLeft: '0.5rem' }}>
           Custom range selected
         </div>
       )}

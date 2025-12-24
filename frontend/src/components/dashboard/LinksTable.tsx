@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import type { LinkTableRow } from '@/types/analytics'
 import { formatDistanceToNow } from 'date-fns'
+import { useTheme } from '@/contexts'
 
 interface LinksTableProps {
   links: LinkTableRow[]
@@ -22,10 +23,17 @@ export default function LinksTable({
   onDeactivate,
   onDelete,
 }: LinksTableProps) {
+  const { theme } = useTheme()
   const [sortBy, setSortBy] = useState<SortField | null>('clicks')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
   const [openMenuId, setOpenMenuId] = useState<number | null>(null)
   const menuRefs = useRef<Record<number, HTMLDivElement | null>>({})
+
+  const bgColor = theme === 'dark' ? '#1f2937' : '#ffffff'
+  const textColor = theme === 'dark' ? '#f9fafb' : '#111827'
+  const textSecondary = theme === 'dark' ? '#d1d5db' : '#6b7280'
+  const borderColor = theme === 'dark' ? '#374151' : '#e5e7eb'
+  const hoverBg = theme === 'dark' ? '#374151' : '#f9fafb'
 
   const handleSort = (field: SortField) => {
     if (sortBy === field) {
@@ -125,12 +133,13 @@ export default function LinksTable({
   if (loading) {
     return (
       <div style={{
-        background: 'white',
+        background: bgColor,
         borderRadius: '8px',
         padding: '2rem',
         boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
         textAlign: 'center',
-        color: '#6b7280',
+        color: textSecondary,
+        transition: 'background-color 0.3s ease, color 0.3s ease',
       }}>
         Loading links...
       </div>
@@ -140,15 +149,16 @@ export default function LinksTable({
   if (links.length === 0) {
     return (
       <div style={{
-        background: 'white',
+        background: bgColor,
         borderRadius: '8px',
         padding: '2rem',
         boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
         textAlign: 'center',
-        color: '#6b7280',
+        color: textSecondary,
+        transition: 'background-color 0.3s ease, color 0.3s ease',
       }}>
         <p>No links found</p>
-        <p style={{ fontSize: '0.875rem', color: '#9ca3af', marginTop: '0.5rem' }}>
+        <p style={{ fontSize: '0.875rem', color: textSecondary, marginTop: '0.5rem' }}>
           Create your first shortened link to get started
         </p>
       </div>
@@ -157,16 +167,17 @@ export default function LinksTable({
 
   return (
     <div style={{
-      background: 'white',
+      background: bgColor,
       borderRadius: '8px',
       padding: '1.5rem',
       boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
       overflowX: 'auto',
+      transition: 'background-color 0.3s ease',
     }}>
       <h3 style={{ 
         fontSize: '1.125rem', 
         fontWeight: '600', 
-        color: '#111827',
+        color: textColor,
         marginTop: 0,
         marginBottom: '1rem'
       }}>
@@ -175,13 +186,13 @@ export default function LinksTable({
 
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
-          <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
+          <tr style={{ borderBottom: `1px solid ${borderColor}` }}>
             <th style={{ 
               textAlign: 'left', 
               padding: '0.75rem 1rem',
               fontSize: '0.75rem',
               fontWeight: '600',
-              color: '#6b7280',
+              color: textSecondary,
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
             }}>
@@ -192,7 +203,7 @@ export default function LinksTable({
               padding: '0.75rem 1rem',
               fontSize: '0.75rem',
               fontWeight: '600',
-              color: '#6b7280',
+              color: textSecondary,
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
             }}>
@@ -203,7 +214,7 @@ export default function LinksTable({
               padding: '0.75rem 1rem',
               fontSize: '0.75rem',
               fontWeight: '600',
-              color: '#6b7280',
+              color: textSecondary,
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
             }}>
@@ -215,7 +226,7 @@ export default function LinksTable({
                 padding: '0.75rem 1rem',
                 fontSize: '0.75rem',
                 fontWeight: '600',
-                color: '#6b7280',
+                color: textSecondary,
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
                 cursor: 'pointer',
@@ -230,7 +241,7 @@ export default function LinksTable({
               padding: '0.75rem 1rem',
               fontSize: '0.75rem',
               fontWeight: '600',
-              color: '#6b7280',
+              color: textSecondary,
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
             }}>
@@ -242,7 +253,7 @@ export default function LinksTable({
                 padding: '0.75rem 1rem',
                 fontSize: '0.75rem',
                 fontWeight: '600',
-                color: '#6b7280',
+                color: textSecondary,
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
                 cursor: 'pointer',
@@ -257,7 +268,7 @@ export default function LinksTable({
               padding: '0.75rem 1rem',
               fontSize: '0.75rem',
               fontWeight: '600',
-              color: '#6b7280',
+              color: textSecondary,
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
             }}>
@@ -268,7 +279,7 @@ export default function LinksTable({
               padding: '0.75rem 1rem',
               fontSize: '0.75rem',
               fontWeight: '600',
-              color: '#6b7280',
+              color: textSecondary,
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
               width: '50px',
@@ -283,7 +294,7 @@ export default function LinksTable({
               key={link.id}
               onClick={() => onRowClick?.(link.id)}
               style={{
-                borderBottom: '1px solid #f3f4f6',
+                borderBottom: `1px solid ${borderColor}`,
                 cursor: onRowClick ? 'pointer' : 'default',
                 transition: 'background-color 0.15s ease',
               }}
@@ -311,7 +322,7 @@ export default function LinksTable({
                   {link.shortUrl}
                 </a>
               </td>
-              <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#6b7280', maxWidth: '300px' }}>
+              <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', color: textSecondary, maxWidth: '300px' }}>
                 <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={link.longUrl}>
                   {truncateUrl(link.longUrl, 50)}
                 </div>
@@ -329,16 +340,16 @@ export default function LinksTable({
                   {link.status === 'active' ? 'Active' : 'Inactive'}
                 </span>
               </td>
-              <td style={{ padding: '0.75rem 1rem', textAlign: 'center', fontSize: '0.875rem', fontWeight: '500' }}>
+              <td style={{ padding: '0.75rem 1rem', textAlign: 'center', fontSize: '0.875rem', fontWeight: '500', color: textColor }}>
                 {link.clicks.toLocaleString()}
               </td>
-              <td style={{ padding: '0.75rem 1rem', textAlign: 'center', fontSize: '0.875rem', color: '#6b7280' }}>
+              <td style={{ padding: '0.75rem 1rem', textAlign: 'center', fontSize: '0.875rem', color: textSecondary }}>
                 {link.uniqueVisitors.toLocaleString()}
               </td>
-              <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#6b7280' }}>
+              <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', color: textSecondary }}>
                 {formatDate(link.lastClicked)}
               </td>
-              <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', color: '#6b7280' }}>
+              <td style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', color: textSecondary }}>
                 {formatDate(link.created)}
               </td>
               <td 
@@ -360,12 +371,12 @@ export default function LinksTable({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#6b7280',
+                    color: textSecondary,
                     fontSize: '1.25rem',
                     lineHeight: 1,
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#f3f4f6'
+                    e.currentTarget.style.backgroundColor = hoverBg
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = 'transparent'
@@ -382,7 +393,7 @@ export default function LinksTable({
                       right: '0.5rem',
                       top: '100%',
                       marginTop: '0.25rem',
-                      background: 'white',
+                      background: bgColor,
                       borderRadius: '6px',
                       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                       border: '1px solid #e5e7eb',
@@ -401,7 +412,7 @@ export default function LinksTable({
                         border: 'none',
                         cursor: 'pointer',
                         fontSize: '0.875rem',
-                        color: '#111827',
+                        color: textColor,
                         display: 'flex',
                         alignItems: 'center',
                         gap: '0.5rem',
@@ -429,7 +440,7 @@ export default function LinksTable({
                           borderTop: '1px solid #e5e7eb',
                           cursor: 'pointer',
                           fontSize: '0.875rem',
-                          color: '#111827',
+                          color: textColor,
                           display: 'flex',
                           alignItems: 'center',
                           gap: '0.5rem',
@@ -456,7 +467,7 @@ export default function LinksTable({
                           borderTop: '1px solid #e5e7eb',
                           cursor: 'pointer',
                           fontSize: '0.875rem',
-                          color: '#111827',
+                          color: textColor,
                           display: 'flex',
                           alignItems: 'center',
                           gap: '0.5rem',
