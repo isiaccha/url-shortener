@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     google_redirect_uri: str
     
     # Frontend
-    frontend_url: str = "http://localhost:5175"
+    frontend_url: str = "http://localhost:5173"
 
     # Auth / Sessions
     session_secret_key: str
