@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ProtectedRoute, Navbar } from '@/components'
-import { useTheme } from '@/contexts'
+import { useTheme, useToast } from '@/contexts'
 import KPICardsRow from '@/components/dashboard/KPICardsRow'
 import CountryMapCard from '@/components/dashboard/CountryMapCard'
 import LinksTable from '@/components/dashboard/LinksTable'
 import DateRangeSelector from '@/components/dashboard/DateRangeSelector'
+import { KPICardSkeleton, TableSkeleton, CardSkeleton } from '@/components/LoadingSkeleton'
 import { getDashboardData, updateLinkStatus, createLink } from '@/api/links'
 import type { DateRange, KPIData, CountryData, LinkTableRow } from '@/types/analytics'
 import type { DashboardResponse } from '@/types/api'
@@ -79,6 +80,7 @@ const transformLinks = (data: DashboardResponse): LinkTableRow[] => {
 function DashboardContent() {
   const navigate = useNavigate()
   const { theme } = useTheme()
+  const { showSuccess, showError } = useToast()
   const [dateRange, setDateRange] = useState<DateRange>({
     start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
     end: new Date(),
@@ -122,7 +124,9 @@ function DashboardContent() {
         setLinks(transformLinks(data))
       } catch (err) {
         console.error('Failed to fetch dashboard data:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load dashboard data')
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load dashboard data'
+        setError(errorMessage)
+        showError(errorMessage)
       } finally {
         setLoading(false)
       }
@@ -148,9 +152,11 @@ function DashboardContent() {
           link.id === linkId ? { ...link, status: 'active' as const } : link
         )
       )
+      showSuccess('Link activated successfully')
     } catch (err) {
       console.error('Failed to activate link:', err)
-      setError(err instanceof Error ? err.message : 'Failed to activate link')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to activate link'
+      showError(errorMessage)
     }
   }
 
@@ -162,9 +168,11 @@ function DashboardContent() {
           link.id === linkId ? { ...link, status: 'inactive' as const } : link
         )
       )
+      showSuccess('Link deactivated successfully')
     } catch (err) {
       console.error('Failed to deactivate link:', err)
-      setError(err instanceof Error ? err.message : 'Failed to deactivate link')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to deactivate link'
+      showError(errorMessage)
     }
   }
 
@@ -211,11 +219,8 @@ function DashboardContent() {
     setCreatingLink(true)
     try {
       const response = await createLink({ target_url: urlToShorten })
-      setCreateLinkSuccess(`Link created! Short URL: ${response.short_url}`)
       setNewLinkUrl('')
-      
-      // Clear success message after 5 seconds
-      setTimeout(() => setCreateLinkSuccess(null), 5000)
+      showSuccess(`Link created! Short URL: ${response.short_url}`)
       
       // Refresh dashboard data to show the new link
       const startDate = dateRange.start.toISOString()
@@ -227,7 +232,9 @@ function DashboardContent() {
       setLinks(transformLinks(data))
     } catch (err) {
       console.error('Failed to create link:', err)
-      setCreateLinkError(err instanceof Error ? err.message : 'Failed to create link')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create link'
+      setCreateLinkError(errorMessage)
+      showError(errorMessage)
     } finally {
       setCreatingLink(false)
     }
@@ -279,14 +286,19 @@ function DashboardContent() {
         <DateRangeSelector value={dateRange} onChange={setDateRange} />
 
         {loading ? (
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '400px',
-            color: textSecondary,
-          }}>
-            Loading dashboard data...
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            {/* KPI Skeletons */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
+              <KPICardSkeleton />
+              <KPICardSkeleton />
+              <KPICardSkeleton />
+            </div>
+            
+            {/* Map Skeleton */}
+            <CardSkeleton />
+            
+            {/* Table Skeleton */}
+            <TableSkeleton rows={5} />
           </div>
         ) : (
           <>

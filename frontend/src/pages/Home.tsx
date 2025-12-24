@@ -1,6 +1,6 @@
 import { useState, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth, useTheme } from '@/contexts'
+import { useAuth, useTheme, useToast } from '@/contexts'
 import Navbar from '@/components/Navbar'
 import { createLink } from '@/api/links'
 import type { LinkResponse } from '@/types/api'
@@ -9,6 +9,7 @@ export default function Home() {
   const navigate = useNavigate()
   const { isAuthenticated, loading, user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
+  const { showSuccess, showError } = useToast()
   const [url, setUrl] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
@@ -58,9 +59,12 @@ export default function Home() {
       const link = await createLink({ target_url: urlToShorten })
       setCreatedLink(link)
       setUrl('') // Clear the input
+      showSuccess('Link shortened successfully!')
     } catch (err) {
       console.error('Failed to create link:', err)
-      setError(err instanceof Error ? err.message : 'Failed to create shortened link. Please try again.')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create shortened link. Please try again.'
+      setError(errorMessage)
+      showError(errorMessage)
     } finally {
       setIsCreating(false)
     }

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ProtectedRoute, Navbar } from '@/components'
-import { useTheme } from '@/contexts'
+import { ProtectedRoute, Navbar, CardSkeleton, TableSkeleton } from '@/components'
+import { useTheme, useToast } from '@/contexts'
 import { getLinkStats } from '@/api/links'
 import CountryMapCard from '@/components/dashboard/CountryMapCard'
 import type { LinkStatsResponse, ClickEventItem } from '@/types/api'
@@ -12,6 +12,7 @@ function LinkStatsContent() {
   const { linkId } = useParams<{ linkId: string }>()
   const navigate = useNavigate()
   const { theme } = useTheme()
+  const { showError } = useToast()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [stats, setStats] = useState<LinkStatsResponse | null>(null)
@@ -42,7 +43,9 @@ function LinkStatsContent() {
         setStats(data)
       } catch (err) {
         console.error('Failed to fetch link stats:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load link statistics')
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load link statistics'
+        setError(errorMessage)
+        showError(errorMessage)
       } finally {
         setLoading(false)
       }
@@ -239,10 +242,18 @@ function LinkStatsContent() {
           maxWidth: '1400px',
           margin: '0 auto',
           padding: '2rem 1rem',
-          textAlign: 'center',
-          color: textSecondary,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '2rem',
         }}>
-          Loading link statistics...
+          <CardSkeleton />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+          <CardSkeleton />
+          <TableSkeleton rows={5} />
         </div>
       </div>
     )

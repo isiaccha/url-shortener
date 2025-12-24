@@ -2,6 +2,7 @@
 export { default as ApiTest } from './ApiTest'
 export { default as ProtectedRoute } from './ProtectedRoute'
 export { default as Navbar } from './Navbar'
+export { Skeleton, CardSkeleton, TableSkeleton, KPICardSkeleton } from './LoadingSkeleton'
 
 // Dashboard components
 export { default as KPICardsRow } from './dashboard/KPICardsRow'
