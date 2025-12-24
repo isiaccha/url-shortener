@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, HttpUrl, field_serializer
 
 
 class LinkCreateRequest(BaseModel):
@@ -89,6 +89,17 @@ class LinkTableData(BaseModel):
     created: datetime
 
     model_config = {"from_attributes": True}
+    
+    @field_serializer('last_clicked', 'created', when_used='json')
+    def serialize_datetime(self, dt: datetime | None) -> str | None:
+        """Ensure datetime is serialized as ISO string with timezone info."""
+        if dt is None:
+            return None
+        # Ensure timezone-aware, default to UTC if naive
+        if dt.tzinfo is None:
+            from datetime import timezone
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.isoformat()
 
 
 class DashboardResponse(BaseModel):

@@ -90,14 +90,31 @@ export default function LinksTable({
   const formatDate = (dateString: string | null): string => {
     if (!dateString) return 'Never'
     try {
-      // Use parseISO for better ISO date string parsing (handles timezones correctly)
-      const date = parseISO(dateString)
+      // Check if date string has timezone info
+      const hasTimezone = dateString.includes('Z') || 
+                          dateString.includes('+') || 
+                          (dateString.match(/[-+]\d{2}:\d{2}$/) !== null)
+      
+      let date: Date
+      
+      if (hasTimezone) {
+        // Has timezone info, use parseISO
+        date = parseISO(dateString)
+      } else {
+        // No timezone info - assume UTC and append 'Z'
+        date = parseISO(dateString.endsWith('Z') ? dateString : dateString + 'Z')
+      }
+      
       // Verify the date is valid
       if (isNaN(date.getTime())) {
+        console.warn('Invalid date:', dateString)
         return 'Invalid date'
       }
+      
+      // formatDistanceToNow will compare correctly as long as the date is parsed correctly
       return formatDistanceToNow(date, { addSuffix: true })
-    } catch {
+    } catch (err) {
+      console.error('Date parsing error:', err, 'Date string:', dateString)
       return 'Invalid date'
     }
   }
