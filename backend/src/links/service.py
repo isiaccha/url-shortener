@@ -127,9 +127,19 @@ def get_total_clicks_for_user(
         click_stmt = select(func.count(ClickEvent.id)).where(ClickEvent.link_id.in_(link_ids_stmt))
         
         if start_date:
-            click_stmt = click_stmt.where(ClickEvent.clicked_at >= start_date)
+            # Ensure UTC for consistent comparison
+            if start_date.tzinfo is not None:
+                start_date_utc = start_date.astimezone(timezone.utc)
+            else:
+                start_date_utc = start_date.replace(tzinfo=timezone.utc)
+            click_stmt = click_stmt.where(ClickEvent.clicked_at >= start_date_utc)
         if end_date:
-            click_stmt = click_stmt.where(ClickEvent.clicked_at <= end_date)
+            # Ensure UTC for consistent comparison
+            if end_date.tzinfo is not None:
+                end_date_utc = end_date.astimezone(timezone.utc)
+            else:
+                end_date_utc = end_date.replace(tzinfo=timezone.utc)
+            click_stmt = click_stmt.where(ClickEvent.clicked_at <= end_date_utc)
         
         result = db.execute(click_stmt).scalar_one()
         return int(result) if result else 0
@@ -159,9 +169,19 @@ def get_unique_visitors_for_user(
     )
     
     if start_date:
-        stmt = stmt.where(ClickEvent.clicked_at >= start_date)
+        # Ensure UTC for consistent comparison
+        if start_date.tzinfo is not None:
+            start_date_utc = start_date.astimezone(timezone.utc)
+        else:
+            start_date_utc = start_date.replace(tzinfo=timezone.utc)
+        stmt = stmt.where(ClickEvent.clicked_at >= start_date_utc)
     if end_date:
-        stmt = stmt.where(ClickEvent.clicked_at <= end_date)
+        # Ensure UTC for consistent comparison
+        if end_date.tzinfo is not None:
+            end_date_utc = end_date.astimezone(timezone.utc)
+        else:
+            end_date_utc = end_date.replace(tzinfo=timezone.utc)
+        stmt = stmt.where(ClickEvent.clicked_at <= end_date_utc)
     
     result = db.execute(stmt).scalar_one()
     return int(result) if result else 0
@@ -212,10 +232,24 @@ def get_clicks_by_country(
         .order_by(desc("clicks"))
     )
     
+    # Apply date filters - ensure timezone-aware datetimes work with SQLite
     if start_date:
-        stmt = stmt.where(ClickEvent.clicked_at >= start_date)
+        # Convert to UTC if timezone-aware, or ensure it's timezone-aware
+        if start_date.tzinfo is not None:
+            # Convert to UTC for consistent comparison
+            start_date_utc = start_date.astimezone(timezone.utc)
+        else:
+            start_date_utc = start_date.replace(tzinfo=timezone.utc)
+        stmt = stmt.where(ClickEvent.clicked_at >= start_date_utc)
+    
     if end_date:
-        stmt = stmt.where(ClickEvent.clicked_at <= end_date)
+        # Convert to UTC if timezone-aware, or ensure it's timezone-aware
+        if end_date.tzinfo is not None:
+            # Convert to UTC for consistent comparison
+            end_date_utc = end_date.astimezone(timezone.utc)
+        else:
+            end_date_utc = end_date.replace(tzinfo=timezone.utc)
+        stmt = stmt.where(ClickEvent.clicked_at <= end_date_utc)
     
     results = db.execute(stmt).all()
     return [

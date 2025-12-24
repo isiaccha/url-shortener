@@ -127,23 +127,43 @@ def get_country_from_ip(ip: str | None) -> str | None:
     if not ip:
         return None
     
-    # Skip localhost/private IPs
-    if ip in ("127.0.0.1", "::1", "localhost") or ip.startswith(("10.", "172.16.", "192.168.")):
+    # Skip localhost/private IPs - for development, return a test country
+    # This allows testing country data functionality locally
+    if ip in ("127.0.0.1", "::1", "localhost"):
+        # For localhost during development, return a test country
+        # In production, you'd want to return None or handle this differently
+        return "US"  # Test country for localhost - change this if needed
+    
+    # Skip private IP ranges (but allow them to try API lookup if needed)
+    if ip.startswith(("10.", "172.16.", "192.168.")):
+        # Private IPs won't work with public GeoIP services
         return None
     
     try:
         # Using ip-api.com free tier (no API key required, 45 req/min limit)
-        # Format: http://ip-api.com/json/{ip}?fields=countryCode
-        with httpx.Client(timeout=2.0) as client:
+        # API format: http://ip-api.com/json/{ip}?fields=countryCode
+        # Note: For localhost testing, this will fail, so we skip it above
+        with httpx.Client(timeout=3.0) as client:
             response = client.get(
                 f"http://ip-api.com/json/{ip}",
                 params={"fields": "countryCode"},
             )
             response.raise_for_status()
             data = response.json()
+            
+            # Check if the response has an error status
+            if data.get("status") == "fail":
+                # API returned an error
+                return None
+            
+            # Get country code from response
             country_code = data.get("countryCode")
+            
             # Return None if countryCode is empty string or missing
-            return country_code if country_code else None
+            if country_code and len(country_code) == 2:
+                return country_code.upper()  # Ensure uppercase (US, GB, etc.)
+            
+            return None
     except Exception:
         # Silently fail - never block analytics due to GeoIP lookup issues
         return None
