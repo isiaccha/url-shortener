@@ -57,7 +57,7 @@ export default function Home() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#f9fafb',
+        background: '#ffffff',
       }}>
         <p style={{ color: '#6b7280' }}>Loading...</p>
       </div>
@@ -67,187 +67,344 @@ export default function Home() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(to bottom, #f9fafb, #ffffff)',
-      display: 'flex',
-      flexDirection: 'column',
+      background: '#ffffff',
     }}>
-      {/* Header */}
+      {/* Header/Navigation */}
       <header style={{
-        padding: '2rem 1rem',
-        textAlign: 'center',
-        background: 'white',
-        borderBottom: '1px solid #e5e7eb',
-      }}>
-        <h1 style={{
-          fontSize: '2.5rem',
-          fontWeight: 'bold',
-          color: '#111827',
-          margin: 0,
-          marginBottom: '0.5rem',
-        }}>
-          URL Shortener
-        </h1>
-        <p style={{
-          fontSize: '1.125rem',
-          color: '#6b7280',
-          margin: 0,
-        }}>
-          Shorten your links and track their performance
-        </p>
-      </header>
-
-      {/* Main Content */}
-      <main style={{
-        flex: 1,
+        padding: '1.5rem 2rem',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
-        padding: '2rem 1rem',
+        justifyContent: 'space-between',
+        borderBottom: '1px solid #e5e7eb',
       }}>
         <div style={{
-          width: '100%',
-          maxWidth: '600px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          fontSize: '1.5rem',
+          fontWeight: 'bold',
+          color: '#111827',
         }}>
-          <form onSubmit={handleSubmit} style={{
-            background: 'white',
-            borderRadius: '12px',
-            padding: '2rem',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-          }}>
-            <label htmlFor="url-input" style={{
-              display: 'block',
+          <span>🔗</span>
+          <span>LinkShort</span>
+        </div>
+        
+        <nav style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '2rem',
+        }}>
+          <a
+            href="#features"
+            style={{
+              color: '#374151',
+              textDecoration: 'none',
               fontSize: '0.875rem',
               fontWeight: '500',
-              color: '#374151',
-              marginBottom: '0.5rem',
-            }}>
-              Enter URL to shorten
-            </label>
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <input
-                id="url-input"
-                type="text"
-                value={url}
-                onChange={(e) => {
-                  setUrl(e.target.value)
-                  setError(null)
-                }}
-                placeholder="https://example.com"
-                style={{
-                  flex: 1,
-                  padding: '0.75rem 1rem',
-                  fontSize: '1rem',
-                  border: error ? '2px solid #ef4444' : '2px solid #e5e7eb',
-                  borderRadius: '8px',
-                  outline: 'none',
-                  transition: 'border-color 0.2s',
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = '#3b82f6'
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = error ? '#ef4444' : '#e5e7eb'
-                }}
-              />
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.color = '#111827'}
+            onMouseLeave={(e) => e.currentTarget.style.color = '#374151'}
+          >
+            Features
+          </a>
+          {isAuthenticated && (
+            <a
+              href="/dashboard"
+              onClick={(e) => {
+                e.preventDefault()
+                navigate('/dashboard')
+              }}
+              style={{
+                color: '#374151',
+                textDecoration: 'none',
+                fontSize: '0.875rem',
+                fontWeight: '500',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = '#111827'}
+              onMouseLeave={(e) => e.currentTarget.style.color = '#374151'}
+            >
+              Dashboard
+            </a>
+          )}
+        </nav>
+
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem',
+        }}>
+          {!isAuthenticated ? (
+            <>
               <button
-                type="submit"
-                disabled={loading}
+                onClick={() => navigate('/login')}
                 style={{
-                  padding: '0.75rem 2rem',
-                  fontSize: '1rem',
-                  fontWeight: '600',
-                  color: 'white',
-                  background: '#3b82f6',
+                  padding: '0.5rem 1rem',
+                  background: 'transparent',
                   border: 'none',
-                  borderRadius: '8px',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  opacity: loading ? 0.6 : 1,
-                  transition: 'background-color 0.2s',
-                }}
-                onMouseEnter={(e) => {
-                  if (!loading) {
-                    e.currentTarget.style.background = '#2563eb'
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!loading) {
-                    e.currentTarget.style.background = '#3b82f6'
-                  }
+                  color: '#111827',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
                 }}
               >
-                Shorten
+                Log in
               </button>
-            </div>
-            {error && (
-              <p style={{
-                marginTop: '0.5rem',
+              <button
+                onClick={() => navigate('/login')}
+                style={{
+                  padding: '0.5rem 1.5rem',
+                  background: '#111827',
+                  border: 'none',
+                  color: 'white',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#374151'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#111827'}
+              >
+                Get Started
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => navigate('/dashboard')}
+              style={{
+                padding: '0.5rem 1.5rem',
+                background: '#111827',
+                border: 'none',
+                color: 'white',
                 fontSize: '0.875rem',
-                color: '#ef4444',
+                fontWeight: '500',
+                borderRadius: '6px',
+                cursor: 'pointer',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#374151'}
+              onMouseLeave={(e) => e.currentTarget.style.background = '#111827'}
+            >
+              Dashboard
+            </button>
+          )}
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <main style={{
+        maxWidth: '1200px',
+        margin: '0 auto',
+        padding: '4rem 2rem',
+      }}>
+        {/* Badge */}
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          padding: '0.375rem 0.75rem',
+          background: '#f3f4f6',
+          borderRadius: '9999px',
+          marginBottom: '2rem',
+          fontSize: '0.875rem',
+        }}>
+          <span style={{ color: '#3b82f6', fontWeight: '600' }}>New</span>
+          <span style={{ color: '#6b7280' }}>Advanced analytics now available</span>
+        </div>
+
+        {/* Headline */}
+        <h1 style={{
+          fontSize: '4rem',
+          fontWeight: 'bold',
+          lineHeight: '1.1',
+          marginBottom: '1.5rem',
+          color: '#111827',
+        }}>
+          Shorten links.<br />
+          <span style={{ color: '#3b82f6' }}>Track performance.</span>
+        </h1>
+
+        {/* Description */}
+        <p style={{
+          fontSize: '1.25rem',
+          color: '#6b7280',
+          marginBottom: '3rem',
+          maxWidth: '600px',
+        }}>
+          Create powerful short links with advanced analytics to understand your audience and optimize your content strategy.
+        </p>
+
+        {/* URL Input Form */}
+        <form onSubmit={handleSubmit} style={{
+          display: 'flex',
+          gap: '1rem',
+          marginBottom: '3rem',
+          maxWidth: '700px',
+        }}>
+          <input
+            type="text"
+            value={url}
+            onChange={(e) => {
+              setUrl(e.target.value)
+              setError(null)
+            }}
+            placeholder="Enter your long URL here..."
+            style={{
+              flex: 1,
+              padding: '1rem 1.5rem',
+              fontSize: '1rem',
+              border: error ? '2px solid #ef4444' : '2px solid #e5e7eb',
+              borderRadius: '8px',
+              outline: 'none',
+              transition: 'border-color 0.2s',
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = '#3b82f6'
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = error ? '#ef4444' : '#e5e7eb'
+            }}
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              padding: '1rem 2rem',
+              fontSize: '1rem',
+              fontWeight: '600',
+              color: 'white',
+              background: '#111827',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              opacity: loading ? 0.6 : 1,
+              transition: 'background-color 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) {
+                e.currentTarget.style.background = '#374151'
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!loading) {
+                e.currentTarget.style.background = '#111827'
+              }
+            }}
+          >
+            Shorten
+          </button>
+        </form>
+
+        {error && (
+          <p style={{
+            marginTop: '-2rem',
+            marginBottom: '2rem',
+            fontSize: '0.875rem',
+            color: '#ef4444',
+          }}>
+            {error}
+          </p>
+        )}
+
+        {/* Feature Highlights */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '2rem',
+          marginTop: '4rem',
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '1rem',
+          }}>
+            <div style={{
+              fontSize: '2rem',
+              lineHeight: 1,
+            }}>
+              📊
+            </div>
+            <div>
+              <h3 style={{
+                fontSize: '1rem',
+                fontWeight: '600',
+                color: '#111827',
+                margin: 0,
+                marginBottom: '0.5rem',
               }}>
-                {error}
-              </p>
-            )}
-            {isAuthenticated && user && (
+                Detailed Analytics
+              </h3>
               <p style={{
-                marginTop: '1rem',
                 fontSize: '0.875rem',
                 color: '#6b7280',
-                textAlign: 'center',
+                margin: 0,
               }}>
-                Signed in as {user.email}
+                Track clicks, understand your audience with detailed user agent data, device types, and geographic information.
               </p>
-            )}
-          </form>
+            </div>
+          </div>
 
-          {/* Additional Info */}
           <div style={{
-            marginTop: '2rem',
-            textAlign: 'center',
-            color: '#6b7280',
-            fontSize: '0.875rem',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '1rem',
           }}>
-            {!isAuthenticated && (
-              <p>
-                <a
-                  href="/login"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    navigate('/login')
-                  }}
-                  style={{
-                    color: '#3b82f6',
-                    textDecoration: 'none',
-                    fontWeight: '500',
-                  }}
-                >
-                  Sign in
-                </a>
-                {' '}to track your links and view analytics
+            <div style={{
+              fontSize: '2rem',
+              lineHeight: 1,
+            }}>
+              🛡️
+            </div>
+            <div>
+              <h3 style={{
+                fontSize: '1rem',
+                fontWeight: '600',
+                color: '#111827',
+                margin: 0,
+                marginBottom: '0.5rem',
+              }}>
+                Secure & Reliable
+              </h3>
+              <p style={{
+                fontSize: '0.875rem',
+                color: '#6b7280',
+                margin: 0,
+              }}>
+                Enterprise-grade security with 99.9% uptime SLA. Your links are safe and always available.
               </p>
-            )}
-            {isAuthenticated && (
-              <p>
-                <a
-                  href="/dashboard"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    navigate('/dashboard')
-                  }}
-                  style={{
-                    color: '#3b82f6',
-                    textDecoration: 'none',
-                    fontWeight: '500',
-                  }}
-                >
-                  View Dashboard
-                </a>
-                {' '}to see all your links and analytics
+            </div>
+          </div>
+
+          <div style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '1rem',
+          }}>
+            <div style={{
+              fontSize: '2rem',
+              lineHeight: 1,
+            }}>
+              🔗
+            </div>
+            <div>
+              <h3 style={{
+                fontSize: '1rem',
+                fontWeight: '600',
+                color: '#111827',
+                margin: 0,
+                marginBottom: '0.5rem',
+              }}>
+                Custom Links
+              </h3>
+              <p style={{
+                fontSize: '0.875rem',
+                color: '#6b7280',
+                margin: 0,
+              }}>
+                Create branded short links with custom domains to strengthen your brand identity.
               </p>
-            )}
+            </div>
           </div>
         </div>
       </main>
     </div>
   )
 }
-
