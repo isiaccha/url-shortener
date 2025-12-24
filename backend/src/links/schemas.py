@@ -88,6 +88,8 @@ class LinkTableData(BaseModel):
     last_clicked: datetime | None
     created: datetime
 
+    model_config = {"from_attributes": True}
+
 
 class DashboardResponse(BaseModel):
     kpis: KPIData

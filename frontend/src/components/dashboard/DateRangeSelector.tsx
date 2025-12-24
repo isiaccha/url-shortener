@@ -11,7 +11,6 @@ const PRESETS: { value: DateRangePreset; label: string }[] = [
   { value: '7d', label: '7d' },
   { value: '30d', label: '30d' },
   { value: '12mo', label: '12mo' },
-  { value: 'custom', label: 'Custom' },
 ]
 
 export default function DateRangeSelector({ value, onChange }: DateRangeSelectorProps) {
@@ -40,10 +39,6 @@ export default function DateRangeSelector({ value, onChange }: DateRangeSelector
       case '12mo':
         start.setMonth(now.getMonth() - 12)
         break
-      case 'custom':
-        // For custom, keep current dates but mark as custom
-        onChange({ ...value, preset: 'custom' })
-        return
     }
 
     onChange({
@@ -96,11 +91,6 @@ export default function DateRangeSelector({ value, onChange }: DateRangeSelector
           {preset.label}
         </button>
       ))}
-      {value.preset === 'custom' && (
-        <div style={{ fontSize: '0.875rem', color: textSecondary, marginLeft: '0.5rem' }}>
-          Custom range selected
-        </div>
-      )}
     </div>
   )
 }

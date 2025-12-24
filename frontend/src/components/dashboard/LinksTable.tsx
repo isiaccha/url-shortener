@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import type { LinkTableRow } from '@/types/analytics'
-import { formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow, parseISO } from 'date-fns'
 import { useTheme } from '@/contexts'
 
 interface LinksTableProps {
@@ -90,7 +90,13 @@ export default function LinksTable({
   const formatDate = (dateString: string | null): string => {
     if (!dateString) return 'Never'
     try {
-      return formatDistanceToNow(new Date(dateString), { addSuffix: true })
+      // Use parseISO for better ISO date string parsing (handles timezones correctly)
+      const date = parseISO(dateString)
+      // Verify the date is valid
+      if (isNaN(date.getTime())) {
+        return 'Invalid date'
+      }
+      return formatDistanceToNow(date, { addSuffix: true })
     } catch {
       return 'Invalid date'
     }

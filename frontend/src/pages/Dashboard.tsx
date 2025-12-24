@@ -6,7 +6,7 @@ import KPICardsRow from '@/components/dashboard/KPICardsRow'
 import CountryMapCard from '@/components/dashboard/CountryMapCard'
 import LinksTable from '@/components/dashboard/LinksTable'
 import DateRangeSelector from '@/components/dashboard/DateRangeSelector'
-import { getDashboardData, updateLinkStatus } from '@/api/links'
+import { getDashboardData, updateLinkStatus, createLink } from '@/api/links'
 import type { DateRange, KPIData, CountryData, LinkTableRow } from '@/types/analytics'
 import type { DashboardResponse } from '@/types/api'
 
@@ -90,10 +90,22 @@ function DashboardContent() {
   const [kpis, setKpis] = useState<KPIData[]>([])
   const [countries, setCountries] = useState<CountryData[]>([])
   const [links, setLinks] = useState<LinkTableRow[]>([])
+  
+  // Link creation state
+  const [newLinkUrl, setNewLinkUrl] = useState('')
+  const [creatingLink, setCreatingLink] = useState(false)
+  const [createLinkError, setCreateLinkError] = useState<string | null>(null)
+  const [createLinkSuccess, setCreateLinkSuccess] = useState<string | null>(null)
 
   const bgColor = theme === 'dark' ? '#111827' : '#f9fafb'
   const textColor = theme === 'dark' ? '#f9fafb' : '#111827'
   const textSecondary = theme === 'dark' ? '#d1d5db' : '#6b7280'
+  const borderColor = theme === 'dark' ? '#374151' : '#e5e7eb'
+  const inputBg = theme === 'dark' ? '#1f2937' : '#ffffff'
+  const inputBorder = theme === 'dark' ? '#4b5563' : '#e5e7eb'
+  const buttonBg = theme === 'dark' ? '#3b82f6' : '#2563eb'
+  const buttonText = '#ffffff'
+  const cardBg = theme === 'dark' ? '#1f2937' : '#ffffff'
 
   // Fetch dashboard data
   useEffect(() => {
@@ -166,6 +178,61 @@ function DashboardContent() {
     )
   }
 
+  const validateUrl = (urlString: string): boolean => {
+    try {
+      const url = new URL(urlString)
+      return url.protocol === 'http:' || url.protocol === 'https:'
+    } catch {
+      return false
+    }
+  }
+
+  const handleCreateLink = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setCreateLinkError(null)
+    setCreateLinkSuccess(null)
+
+    if (!newLinkUrl.trim()) {
+      setCreateLinkError('Please enter a URL')
+      return
+    }
+
+    // Add protocol if missing
+    let urlToShorten = newLinkUrl.trim()
+    if (!urlToShorten.startsWith('http://') && !urlToShorten.startsWith('https://')) {
+      urlToShorten = `https://${urlToShorten}`
+    }
+
+    if (!validateUrl(urlToShorten)) {
+      setCreateLinkError('Please enter a valid URL')
+      return
+    }
+
+    setCreatingLink(true)
+    try {
+      const response = await createLink({ target_url: urlToShorten })
+      setCreateLinkSuccess(`Link created! Short URL: ${response.short_url}`)
+      setNewLinkUrl('')
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setCreateLinkSuccess(null), 5000)
+      
+      // Refresh dashboard data to show the new link
+      const startDate = dateRange.start.toISOString()
+      const endDate = dateRange.end.toISOString()
+      const data = await getDashboardData(startDate, endDate)
+      
+      setKpis(transformKPIs(data))
+      setCountries(transformCountries(data))
+      setLinks(transformLinks(data))
+    } catch (err) {
+      console.error('Failed to create link:', err)
+      setCreateLinkError(err instanceof Error ? err.message : 'Failed to create link')
+    } finally {
+      setCreatingLink(false)
+    }
+  }
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -228,6 +295,99 @@ function DashboardContent() {
 
             {/* Country Map Card */}
             <CountryMapCard countries={countries} totalClicks={totalClicks} topCount={3} />
+
+            {/* Create Link Form */}
+            <div style={{
+              background: cardBg,
+              borderRadius: '8px',
+              padding: '1.5rem',
+              marginBottom: '1.5rem',
+              boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+              border: `1px solid ${borderColor}`,
+              transition: 'background-color 0.3s ease, border-color 0.3s ease',
+            }}>
+              <h2 style={{
+                fontSize: '1.125rem',
+                fontWeight: '600',
+                color: textColor,
+                marginTop: 0,
+                marginBottom: '1rem',
+              }}>
+                Create New Short Link
+              </h2>
+              <form onSubmit={handleCreateLink} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                <div style={{ flex: 1 }}>
+                  <input
+                    type="text"
+                    value={newLinkUrl}
+                    onChange={(e) => setNewLinkUrl(e.target.value)}
+                    placeholder="Enter URL to shorten (e.g., https://example.com)"
+                    disabled={creatingLink}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      fontSize: '0.875rem',
+                      background: inputBg,
+                      border: `1px solid ${createLinkError ? '#ef4444' : inputBorder}`,
+                      borderRadius: '6px',
+                      color: textColor,
+                      transition: 'background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease',
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = buttonBg
+                      e.target.style.outline = 'none'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = createLinkError ? '#ef4444' : inputBorder
+                    }}
+                  />
+                  {createLinkError && (
+                    <p style={{
+                      margin: '0.5rem 0 0 0',
+                      fontSize: '0.875rem',
+                      color: '#ef4444',
+                    }}>
+                      {createLinkError}
+                    </p>
+                  )}
+                  {createLinkSuccess && (
+                    <p style={{
+                      margin: '0.5rem 0 0 0',
+                      fontSize: '0.875rem',
+                      color: '#10b981',
+                    }}>
+                      {createLinkSuccess}
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="submit"
+                  disabled={creatingLink || !newLinkUrl.trim()}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    background: creatingLink || !newLinkUrl.trim() ? '#9ca3af' : buttonBg,
+                    color: buttonText,
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: creatingLink || !newLinkUrl.trim() ? 'not-allowed' : 'pointer',
+                    transition: 'background-color 0.2s, opacity 0.2s',
+                    whiteSpace: 'nowrap',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!creatingLink && newLinkUrl.trim()) {
+                      e.currentTarget.style.opacity = '0.9'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.opacity = '1'
+                  }}
+                >
+                  {creatingLink ? 'Creating...' : 'Shorten Link'}
+                </button>
+              </form>
+            </div>
 
             {/* Links Table */}
             <LinksTable 
