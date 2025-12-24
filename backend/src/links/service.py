@@ -3,8 +3,9 @@ from __future__ import annotations
 from datetime import datetime, timezone, timedelta
 
 from fastapi import Request
-from sqlalchemy import select, func, desc
+from sqlalchemy import select, func, desc, and_, distinct, text
 from sqlalchemy.orm import Session
+from src.core.config import settings
 
 from src.links.slug import slug_for_id
 from src.links.utils import (
@@ -110,4 +111,248 @@ def recent_click_events(db: Session, *, link_id: int, limit: int = 50) -> list[C
         .limit(limit)
     )
     return list(db.execute(stmt).scalars().all())
+
+
+# Dashboard analytics functions
+
+def get_total_clicks_for_user(
+    db: Session, *, user_id: int, start_date: datetime | None = None, end_date: datetime | None = None
+) -> int:
+    """Get total clicks across all user's links, optionally filtered by date range."""
+    stmt = select(func.sum(Link.click_count)).where(Link.user_id == user_id)
+    
+    if start_date or end_date:
+        # If date filtering, we need to count from ClickEvents instead
+        link_ids_stmt = select(Link.id).where(Link.user_id == user_id)
+        click_stmt = select(func.count(ClickEvent.id)).where(ClickEvent.link_id.in_(link_ids_stmt))
+        
+        if start_date:
+            click_stmt = click_stmt.where(ClickEvent.clicked_at >= start_date)
+        if end_date:
+            click_stmt = click_stmt.where(ClickEvent.clicked_at <= end_date)
+        
+        result = db.execute(click_stmt).scalar_one()
+        return int(result) if result else 0
+    
+    result = db.execute(stmt).scalar_one()
+    return int(result) if result else 0
+
+
+def get_total_links_for_user(db: Session, *, user_id: int) -> int:
+    """Get total number of links for a user."""
+    stmt = select(func.count(Link.id)).where(Link.user_id == user_id)
+    return int(db.execute(stmt).scalar_one())
+
+
+def get_unique_visitors_for_user(
+    db: Session, *, user_id: int, start_date: datetime | None = None, end_date: datetime | None = None
+) -> int:
+    """Get count of unique visitors (distinct visitor_hash) across all user's links."""
+    link_ids_stmt = select(Link.id).where(Link.user_id == user_id)
+    
+    stmt = (
+        select(func.count(distinct(ClickEvent.visitor_hash)))
+        .where(
+            ClickEvent.link_id.in_(link_ids_stmt),
+            ClickEvent.visitor_hash.isnot(None),
+        )
+    )
+    
+    if start_date:
+        stmt = stmt.where(ClickEvent.clicked_at >= start_date)
+    if end_date:
+        stmt = stmt.where(ClickEvent.clicked_at <= end_date)
+    
+    result = db.execute(stmt).scalar_one()
+    return int(result) if result else 0
+
+
+def get_unique_visitors_per_link(
+    db: Session, *, link_ids: list[int], start_date: datetime | None = None, end_date: datetime | None = None
+) -> dict[int, int]:
+    """Get unique visitor count per link. Returns dict mapping link_id to count."""
+    stmt = (
+        select(
+            ClickEvent.link_id,
+            func.count(distinct(ClickEvent.visitor_hash)).label("unique_count")
+        )
+        .where(
+            ClickEvent.link_id.in_(link_ids),
+            ClickEvent.visitor_hash.isnot(None),
+        )
+        .group_by(ClickEvent.link_id)
+    )
+    
+    if start_date:
+        stmt = stmt.where(ClickEvent.clicked_at >= start_date)
+    if end_date:
+        stmt = stmt.where(ClickEvent.clicked_at <= end_date)
+    
+    results = db.execute(stmt).all()
+    return {row.link_id: int(row.unique_count) for row in results}
+
+
+def get_clicks_by_country(
+    db: Session, *, user_id: int, start_date: datetime | None = None, end_date: datetime | None = None
+) -> list[dict[str, int]]:
+    """Get clicks aggregated by country code. Returns list of {country_code, clicks, unique_visitors}."""
+    link_ids_stmt = select(Link.id).where(Link.user_id == user_id)
+    
+    stmt = (
+        select(
+            ClickEvent.country,
+            func.count(ClickEvent.id).label("clicks"),
+            func.count(distinct(ClickEvent.visitor_hash)).label("unique_visitors")
+        )
+        .where(
+            ClickEvent.link_id.in_(link_ids_stmt),
+            ClickEvent.country.isnot(None),
+        )
+        .group_by(ClickEvent.country)
+        .order_by(desc("clicks"))
+    )
+    
+    if start_date:
+        stmt = stmt.where(ClickEvent.clicked_at >= start_date)
+    if end_date:
+        stmt = stmt.where(ClickEvent.clicked_at <= end_date)
+    
+    results = db.execute(stmt).all()
+    return [
+        {
+            "country_code": row.country,
+            "clicks": int(row.clicks),
+            "unique_visitors": int(row.unique_visitors) if row.unique_visitors else 0,
+        }
+        for row in results
+    ]
+
+
+def get_clicks_time_series(
+    db: Session, *, user_id: int, start_date: datetime, end_date: datetime, granularity: str = "hour"
+) -> list[dict[str, int]]:
+    """
+    Get time-series click data for sparklines.
+    granularity: "hour", "day", "month"
+    Returns list of {timestamp: str (ISO), value: int}
+    Supports both PostgreSQL (date_trunc) and SQLite (strftime).
+    """
+    link_ids_stmt = select(Link.id).where(Link.user_id == user_id)
+    
+    # Check if using SQLite
+    is_sqlite = settings.database_url.startswith("sqlite")
+    
+    # Determine date truncation based on database and granularity
+    if is_sqlite:
+        # SQLite uses strftime for date truncation
+        if granularity == "hour":
+            trunc_func = func.strftime("%Y-%m-%d %H:00:00", ClickEvent.clicked_at)
+        elif granularity == "day":
+            trunc_func = func.date(ClickEvent.clicked_at)
+        elif granularity == "month":
+            trunc_func = func.strftime("%Y-%m-01 00:00:00", ClickEvent.clicked_at)
+        else:
+            trunc_func = func.strftime("%Y-%m-%d %H:00:00", ClickEvent.clicked_at)
+    else:
+        # PostgreSQL uses date_trunc
+        if granularity == "hour":
+            trunc_func = func.date_trunc("hour", ClickEvent.clicked_at)
+        elif granularity == "day":
+            trunc_func = func.date_trunc("day", ClickEvent.clicked_at)
+        elif granularity == "month":
+            trunc_func = func.date_trunc("month", ClickEvent.clicked_at)
+        else:
+            trunc_func = func.date_trunc("hour", ClickEvent.clicked_at)
+    
+    stmt = (
+        select(
+            trunc_func.label("time_bucket"),
+            func.count(ClickEvent.id).label("count")
+        )
+        .where(
+            ClickEvent.link_id.in_(link_ids_stmt),
+            ClickEvent.clicked_at >= start_date,
+            ClickEvent.clicked_at <= end_date,
+        )
+        .group_by(trunc_func)
+        .order_by(trunc_func)
+    )
+    
+    results = db.execute(stmt).all()
+    
+    # Convert results to proper format
+    formatted_results = []
+    for row in results:
+        time_bucket = row.time_bucket
+        
+        # For SQLite, time_bucket is a string, convert to datetime
+        if isinstance(time_bucket, str):
+            try:
+                # Parse SQLite date/time formats
+                if granularity == "hour":
+                    # Format: "YYYY-MM-DD HH:00:00"
+                    time_bucket = datetime.strptime(time_bucket, "%Y-%m-%d %H:00:00")
+                elif granularity == "day":
+                    # Format: "YYYY-MM-DD"
+                    time_bucket = datetime.strptime(time_bucket, "%Y-%m-%d")
+                elif granularity == "month":
+                    # Format: "YYYY-MM-01 00:00:00"
+                    time_bucket = datetime.strptime(time_bucket, "%Y-%m-%d %H:%M:%S")
+                else:
+                    time_bucket = datetime.strptime(time_bucket, "%Y-%m-%d %H:00:00")
+                # Make timezone-aware (assume UTC)
+                if time_bucket.tzinfo is None:
+                    time_bucket = time_bucket.replace(tzinfo=timezone.utc)
+            except (ValueError, TypeError) as e:
+                # If parsing fails, log and skip this row
+                print(f"Warning: Failed to parse time_bucket '{time_bucket}': {e}")
+                continue
+        
+        # Convert to ISO format string
+        if isinstance(time_bucket, datetime):
+            timestamp_str = time_bucket.isoformat()
+        else:
+            # Fallback: use string as-is (shouldn't happen)
+            timestamp_str = str(time_bucket)
+        
+        formatted_results.append({
+            "timestamp": timestamp_str,
+            "value": int(row.count),
+        })
+    
+    return formatted_results
+
+
+def get_previous_period_metrics(
+    db: Session, *, user_id: int, current_start: datetime, current_end: datetime
+) -> dict[str, int]:
+    """
+    Get metrics for the previous period (same duration before current period).
+    Returns dict with total_clicks, total_links, unique_visitors.
+    """
+    period_duration = current_end - current_start
+    previous_end = current_start
+    previous_start = previous_end - period_duration
+    
+    return {
+        "total_clicks": get_total_clicks_for_user(
+            db, user_id=user_id, start_date=previous_start, end_date=previous_end
+        ),
+        "total_links": get_total_links_for_user(db, user_id=user_id),  # Links don't change by period
+        "unique_visitors": get_unique_visitors_for_user(
+            db, user_id=user_id, start_date=previous_start, end_date=previous_end
+        ),
+    }
+
+
+def update_link_status(db: Session, *, user_id: int, link_id: int, is_active: bool) -> Link | None:
+    """Update the active status of a link. Returns the updated link or None if not found."""
+    link = get_link_for_user(db, user_id=user_id, link_id=link_id)
+    if not link:
+        return None
+    
+    link.is_active = is_active
+    db.commit()
+    db.refresh(link)
+    return link
 

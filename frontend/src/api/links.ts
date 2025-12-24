@@ -39,3 +39,33 @@ export const getLinkStats = async (linkId: number): Promise<LinkStatsResponse> =
   return response.data
 }
 
+/**
+ * Get dashboard analytics data
+ */
+export const getDashboardData = async (
+  startDate: string, // ISO datetime string
+  endDate: string    // ISO datetime string
+): Promise<import('@/types/api').DashboardResponse> => {
+  const response = await apiClient.get<import('@/types/api').DashboardResponse>('/api/links/dashboard', {
+    params: {
+      start_date: startDate,
+      end_date: endDate,
+    },
+  })
+  return response.data
+}
+
+/**
+ * Update link status (activate/deactivate)
+ */
+export const updateLinkStatus = async (
+  linkId: number,
+  isActive: boolean
+): Promise<LinkListItem> => {
+  const response = await apiClient.patch<LinkListItem>(
+    `/api/links/${linkId}/status?is_active=${isActive}`,
+    {}
+  )
+  return response.data
+}
+

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ProtectedRoute, Navbar } from '@/components'
 import { useTheme } from '@/contexts'
@@ -6,109 +6,74 @@ import KPICardsRow from '@/components/dashboard/KPICardsRow'
 import CountryMapCard from '@/components/dashboard/CountryMapCard'
 import LinksTable from '@/components/dashboard/LinksTable'
 import DateRangeSelector from '@/components/dashboard/DateRangeSelector'
+import { getDashboardData, updateLinkStatus } from '@/api/links'
 import type { DateRange, KPIData, CountryData, LinkTableRow } from '@/types/analytics'
+import type { DashboardResponse } from '@/types/api'
 
-// Mock data generator
-const generateMockSparkline = (points: number = 24): Array<{ timestamp: string; value: number }> => {
-  const now = new Date()
-  const data: Array<{ timestamp: string; value: number }> = []
-  const baseValue = Math.random() * 100 + 50
-
-  for (let i = points - 1; i >= 0; i--) {
-    const date = new Date(now)
-    date.setHours(date.getHours() - i)
-    data.push({
-      timestamp: date.toISOString(),
-      value: Math.max(0, baseValue + (Math.random() - 0.5) * 40),
-    })
+// Transform backend API response to frontend types
+const transformKPIs = (data: DashboardResponse): KPIData[] => {
+  const { kpis, sparkline_data } = data
+  
+  const calcDelta = (current: number, previous: number): number => {
+    if (previous === 0) return current > 0 ? 100.0 : 0.0
+    return ((current - previous) / previous) * 100.0
   }
-  return data
-}
 
-const generateMockKPIs = (): KPIData[] => {
-  const totalClicks = Math.floor(Math.random() * 50000) + 10000
-  const totalLinks = Math.floor(Math.random() * 200) + 50
-  const uniqueVisitors = Math.floor(totalClicks * 0.7)
+  const calcTrend = (current: number, previous: number): 'up' | 'down' | 'neutral' => {
+    if (current > previous) return 'up'
+    if (current < previous) return 'down'
+    return 'neutral'
+  }
 
   return [
     {
       title: 'Total Clicks',
-      value: totalClicks,
-      previousValue: Math.floor(totalClicks * 0.85),
-      delta: 15.2,
-      sparklineData: generateMockSparkline(24),
-      trend: 'up',
+      value: kpis.total_clicks,
+      previousValue: kpis.previous_period_clicks,
+      delta: calcDelta(kpis.total_clicks, kpis.previous_period_clicks),
+      sparklineData: sparkline_data.map(p => ({ timestamp: p.timestamp, value: p.value })),
+      trend: calcTrend(kpis.total_clicks, kpis.previous_period_clicks),
     },
     {
       title: 'Total Links',
-      value: totalLinks,
-      previousValue: Math.floor(totalLinks * 0.9),
-      delta: 10.5,
-      sparklineData: generateMockSparkline(24),
-      trend: 'up',
+      value: kpis.total_links,
+      previousValue: kpis.previous_period_links,
+      delta: calcDelta(kpis.total_links, kpis.previous_period_links),
+      sparklineData: sparkline_data.map(p => ({ timestamp: p.timestamp, value: p.value })),
+      trend: calcTrend(kpis.total_links, kpis.previous_period_links),
     },
     {
       title: 'Unique Visitors',
-      value: uniqueVisitors,
-      previousValue: Math.floor(uniqueVisitors * 0.88),
-      delta: 12.3,
-      sparklineData: generateMockSparkline(24),
-      trend: 'up',
+      value: kpis.unique_visitors,
+      previousValue: kpis.previous_period_unique_visitors,
+      delta: calcDelta(kpis.unique_visitors, kpis.previous_period_unique_visitors),
+      sparklineData: sparkline_data.map(p => ({ timestamp: p.timestamp, value: p.value })),
+      trend: calcTrend(kpis.unique_visitors, kpis.previous_period_unique_visitors),
     },
   ]
 }
 
-const generateMockCountries = (): CountryData[] => {
-  const countries: CountryData[] = [
-    { countryCode: 'US', countryName: 'United States', clicks: 15234, percentage: 32.5 },
-    { countryCode: 'GB', countryName: 'United Kingdom', clicks: 8234, percentage: 17.6 },
-    { countryCode: 'CA', countryName: 'Canada', clicks: 5432, percentage: 11.6 },
-    { countryCode: 'AU', countryName: 'Australia', clicks: 4321, percentage: 9.2 },
-    { countryCode: 'DE', countryName: 'Germany', clicks: 3210, percentage: 6.9 },
-    { countryCode: 'FR', countryName: 'France', clicks: 2890, percentage: 6.2 },
-    { countryCode: 'IT', countryName: 'Italy', clicks: 2100, percentage: 4.5 },
-    { countryCode: 'ES', countryName: 'Spain', clicks: 1890, percentage: 4.0 },
-    { countryCode: 'NL', countryName: 'Netherlands', clicks: 1650, percentage: 3.5 },
-    { countryCode: 'BR', countryName: 'Brazil', clicks: 1450, percentage: 3.1 },
-  ]
-
-  const total = countries.reduce((sum, c) => sum + c.clicks, 0)
-  return countries.map(c => ({
-    ...c,
-    percentage: (c.clicks / total) * 100,
-    uniqueVisitors: Math.floor(c.clicks * 0.75),
+const transformCountries = (data: DashboardResponse): CountryData[] => {
+  return data.countries.map(c => ({
+    countryCode: c.country_code,
+    countryName: c.country_name,
+    clicks: c.clicks,
+    percentage: c.percentage,
+    uniqueVisitors: c.unique_visitors,
   }))
 }
 
-const generateMockLinks = (): LinkTableRow[] => {
-  const links: LinkTableRow[] = []
-  const domains = ['example.com', 'test.com', 'demo.org', 'sample.net', 'website.io']
-  const paths = ['/page1', '/page2', '/article', '/blog/post', '/product', '/about', '/contact']
-
-  for (let i = 0; i < 15; i++) {
-    const domain = domains[Math.floor(Math.random() * domains.length)]
-    const path = paths[Math.floor(Math.random() * paths.length)]
-    const clicks = Math.floor(Math.random() * 5000)
-    const created = new Date()
-    created.setDate(created.getDate() - Math.floor(Math.random() * 90))
-    
-    const lastClicked = clicks > 0 
-      ? new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000)
-      : null
-
-    links.push({
-      id: i + 1,
-      shortUrl: `https://short.ly/abc${i + 1}`,
-      longUrl: `https://${domain}${path}`,
-      status: Math.random() > 0.2 ? 'active' : 'inactive',
-      clicks,
-      uniqueVisitors: Math.floor(clicks * 0.7),
-      lastClicked: lastClicked?.toISOString() || null,
-      created: created.toISOString(),
-    })
-  }
-
-  return links
+const transformLinks = (data: DashboardResponse): LinkTableRow[] => {
+  return data.links.map(l => ({
+    id: l.id,
+    shortUrl: l.short_url,
+    longUrl: l.long_url,
+    status: l.status === 'active' ? 'active' : 'inactive',
+    clicks: l.clicks,
+    uniqueVisitors: l.unique_visitors,
+    lastClicked: l.last_clicked,
+    created: l.created,
+  }))
 }
 
 function DashboardContent() {
@@ -120,17 +85,40 @@ function DashboardContent() {
     preset: '7d',
   })
 
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [kpis, setKpis] = useState<KPIData[]>([])
+  const [countries, setCountries] = useState<CountryData[]>([])
+  const [links, setLinks] = useState<LinkTableRow[]>([])
+
   const bgColor = theme === 'dark' ? '#111827' : '#f9fafb'
   const textColor = theme === 'dark' ? '#f9fafb' : '#111827'
   const textSecondary = theme === 'dark' ? '#d1d5db' : '#6b7280'
 
-  // Mock data
-  const kpis = generateMockKPIs()
-  const countries = generateMockCountries()
-  
-  // Manage links state so we can update them
-  const [links, setLinks] = useState(() => generateMockLinks())
-  
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const startDate = dateRange.start.toISOString()
+        const endDate = dateRange.end.toISOString()
+        const data = await getDashboardData(startDate, endDate)
+        
+        setKpis(transformKPIs(data))
+        setCountries(transformCountries(data))
+        setLinks(transformLinks(data))
+      } catch (err) {
+        console.error('Failed to fetch dashboard data:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load dashboard data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [dateRange])
+
   // Filter out deleted links from display
   const visibleLinks = links.filter(link => !link.deleted)
   
@@ -140,25 +128,37 @@ function DashboardContent() {
     navigate(`/links/${linkId}/stats`)
   }
 
-  const handleActivate = (linkId: number) => {
-    setLinks(prevLinks =>
-      prevLinks.map(link =>
-        link.id === linkId ? { ...link, status: 'active' as const } : link
+  const handleActivate = async (linkId: number) => {
+    try {
+      await updateLinkStatus(linkId, true)
+      setLinks(prevLinks =>
+        prevLinks.map(link =>
+          link.id === linkId ? { ...link, status: 'active' as const } : link
+        )
       )
-    )
+    } catch (err) {
+      console.error('Failed to activate link:', err)
+      setError(err instanceof Error ? err.message : 'Failed to activate link')
+    }
   }
 
-  const handleDeactivate = (linkId: number) => {
-    setLinks(prevLinks =>
-      prevLinks.map(link =>
-        link.id === linkId ? { ...link, status: 'inactive' as const } : link
+  const handleDeactivate = async (linkId: number) => {
+    try {
+      await updateLinkStatus(linkId, false)
+      setLinks(prevLinks =>
+        prevLinks.map(link =>
+          link.id === linkId ? { ...link, status: 'inactive' as const } : link
+        )
       )
-    )
+    } catch (err) {
+      console.error('Failed to deactivate link:', err)
+      setError(err instanceof Error ? err.message : 'Failed to deactivate link')
+    }
   }
 
   const handleDelete = (linkId: number) => {
     // Soft delete - only mark as deleted, don't remove from array
-    // This simulates removing from user view but keeping in DB
+    // This removes from user view but keeps in DB
     setLinks(prevLinks =>
       prevLinks.map(link =>
         link.id === linkId ? { ...link, deleted: true } : link
@@ -194,23 +194,51 @@ function DashboardContent() {
           </p>
         </div>
 
-      {/* Date Range Selector */}
-      <DateRangeSelector value={dateRange} onChange={setDateRange} />
+        {/* Error Message */}
+        {error && (
+          <div style={{
+            padding: '1rem',
+            marginBottom: '1.5rem',
+            background: theme === 'dark' ? '#7f1d1d' : '#fee2e2',
+            color: theme === 'dark' ? '#fca5a5' : '#991b1b',
+            borderRadius: '6px',
+            border: `1px solid ${theme === 'dark' ? '#991b1b' : '#fecaca'}`,
+          }}>
+            {error}
+          </div>
+        )}
 
-      {/* KPI Cards Row */}
-      <KPICardsRow kpis={kpis} />
+        {/* Date Range Selector */}
+        <DateRangeSelector value={dateRange} onChange={setDateRange} />
 
-      {/* Country Map Card */}
-      <CountryMapCard countries={countries} totalClicks={totalClicks} topCount={3} />
+        {loading ? (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '400px',
+            color: textSecondary,
+          }}>
+            Loading dashboard data...
+          </div>
+        ) : (
+          <>
+            {/* KPI Cards Row */}
+            <KPICardsRow kpis={kpis} />
 
-      {/* Links Table */}
-      <LinksTable 
-        links={visibleLinks} 
-        onRowClick={handleLinkClick}
-        onActivate={handleActivate}
-        onDeactivate={handleDeactivate}
-        onDelete={handleDelete}
-      />
+            {/* Country Map Card */}
+            <CountryMapCard countries={countries} totalClicks={totalClicks} topCount={3} />
+
+            {/* Links Table */}
+            <LinksTable 
+              links={visibleLinks} 
+              onRowClick={handleLinkClick}
+              onActivate={handleActivate}
+              onDeactivate={handleDeactivate}
+              onDelete={handleDelete}
+            />
+          </>
+        )}
       </div>
     </div>
   )

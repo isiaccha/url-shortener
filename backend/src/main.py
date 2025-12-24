@@ -8,8 +8,11 @@ from src.links.router import router as links_router
 from src.links.redirect_router import router as redirect_router
 from src.db.session import Base, engine
 
+# Import all models to ensure they're registered with SQLAlchemy Base
 import src.models.user
 import src.models.oauth_account
+import src.models.link
+import src.models.click_event
 
 app = FastAPI(debug=settings.debug)
 
