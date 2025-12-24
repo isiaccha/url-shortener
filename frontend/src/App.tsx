@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider, ThemeProvider } from './contexts'
-import { Home, Login, AuthCallback, Dashboard } from './pages'
+import { Home, Login, AuthCallback, Dashboard, LinkStats } from './pages'
 import { ProtectedRoute } from './components'
 
 function App() {
@@ -13,6 +13,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/links/:linkId/stats" element={<LinkStats />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
