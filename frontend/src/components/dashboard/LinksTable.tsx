@@ -12,7 +12,7 @@ interface LinksTableProps {
   onDelete?: (linkId: number) => void
 }
 
-type SortField = 'clicks' | 'lastClicked'
+type SortField = 'clicks' | 'lastClicked' | 'created' | 'uniqueVisitors' | 'status'
 type SortOrder = 'asc' | 'desc'
 
 export default function LinksTable({ 
@@ -57,6 +57,16 @@ export default function LinksTable({
       } else if (sortBy === 'lastClicked') {
         aValue = a.lastClicked
         bValue = b.lastClicked
+      } else if (sortBy === 'created') {
+        aValue = a.created
+        bValue = b.created
+      } else if (sortBy === 'uniqueVisitors') {
+        aValue = a.uniqueVisitors
+        bValue = b.uniqueVisitors
+      } else if (sortBy === 'status') {
+        // Sort by status: 'active' comes before 'inactive'
+        aValue = a.status === 'active' ? 1 : 0
+        bValue = b.status === 'active' ? 1 : 0
       } else {
         return 0
       }
@@ -232,16 +242,21 @@ export default function LinksTable({
             }}>
               Long URL
             </th>
-            <th style={{ 
-              textAlign: 'center', 
-              padding: '0.75rem 1rem',
-              fontSize: '0.75rem',
-              fontWeight: '600',
-              color: textSecondary,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-            }}>
-              Status
+            <th 
+              style={{ 
+                textAlign: 'center', 
+                padding: '0.75rem 1rem',
+                fontSize: '0.75rem',
+                fontWeight: '600',
+                color: textSecondary,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                cursor: 'pointer',
+                userSelect: 'none',
+              }}
+              onClick={() => handleSort('status')}
+            >
+              Status {sortBy === 'status' && (sortOrder === 'asc' ? '↑' : '↓')}
             </th>
             <th 
               style={{ 
@@ -259,16 +274,21 @@ export default function LinksTable({
             >
               Clicks {sortBy === 'clicks' && (sortOrder === 'asc' ? '↑' : '↓')}
             </th>
-            <th style={{ 
-              textAlign: 'center', 
-              padding: '0.75rem 1rem',
-              fontSize: '0.75rem',
-              fontWeight: '600',
-              color: textSecondary,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-            }}>
-              Unique Visitors
+            <th 
+              style={{ 
+                textAlign: 'center', 
+                padding: '0.75rem 1rem',
+                fontSize: '0.75rem',
+                fontWeight: '600',
+                color: textSecondary,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                cursor: 'pointer',
+                userSelect: 'none',
+              }}
+              onClick={() => handleSort('uniqueVisitors')}
+            >
+              Unique Visitors {sortBy === 'uniqueVisitors' && (sortOrder === 'asc' ? '↑' : '↓')}
             </th>
             <th 
               style={{ 
@@ -286,16 +306,21 @@ export default function LinksTable({
             >
               Last Clicked {sortBy === 'lastClicked' && (sortOrder === 'asc' ? '↑' : '↓')}
             </th>
-            <th style={{ 
-              textAlign: 'left', 
-              padding: '0.75rem 1rem',
-              fontSize: '0.75rem',
-              fontWeight: '600',
-              color: textSecondary,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-            }}>
-              Created
+            <th 
+              style={{ 
+                textAlign: 'left', 
+                padding: '0.75rem 1rem',
+                fontSize: '0.75rem',
+                fontWeight: '600',
+                color: textSecondary,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                cursor: 'pointer',
+                userSelect: 'none',
+              }}
+              onClick={() => handleSort('created')}
+            >
+              Created {sortBy === 'created' && (sortOrder === 'asc' ? '↑' : '↓')}
             </th>
             <th style={{ 
               textAlign: 'center', 
@@ -410,7 +435,7 @@ export default function LinksTable({
                 
                 {openMenuId === link.id && (
                   <div
-                    ref={(el) => (menuRefs.current[link.id] = el)}
+                    ref={(el) => { menuRefs.current[link.id] = el }}
                     style={{
                       position: 'absolute',
                       right: '0.5rem',
