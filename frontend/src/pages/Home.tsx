@@ -2,6 +2,8 @@ import { useState, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth, useTheme } from '@/contexts'
 import Navbar from '@/components/Navbar'
+import { createLink } from '@/api/links'
+import type { LinkResponse } from '@/types/api'
 
 export default function Home() {
   const navigate = useNavigate()
@@ -9,6 +11,8 @@ export default function Home() {
   const { theme, toggleTheme } = useTheme()
   const [url, setUrl] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [isCreating, setIsCreating] = useState(false)
+  const [createdLink, setCreatedLink] = useState<LinkResponse | null>(null)
 
   const validateUrl = (urlString: string): boolean => {
     try {
@@ -22,6 +26,7 @@ export default function Home() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
+    setCreatedLink(null)
 
     // Validate URL
     if (!url.trim()) {
@@ -47,9 +52,29 @@ export default function Home() {
       return
     }
 
-    // For now, just redirect to dashboard
-    // TODO: Actually shorten the link and show the result
-    navigate('/dashboard')
+    // Create the shortened link
+    setIsCreating(true)
+    try {
+      const link = await createLink({ target_url: urlToShorten })
+      setCreatedLink(link)
+      setUrl('') // Clear the input
+    } catch (err) {
+      console.error('Failed to create link:', err)
+      setError(err instanceof Error ? err.message : 'Failed to create shortened link. Please try again.')
+    } finally {
+      setIsCreating(false)
+    }
+  }
+
+  const handleCopy = async () => {
+    if (!createdLink?.short_url) return
+    
+    try {
+      await navigator.clipboard.writeText(createdLink.short_url)
+      // You could add a toast notification here
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
   }
 
   if (loading) {
@@ -170,7 +195,7 @@ export default function Home() {
           />
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || isCreating}
             style={{
               padding: '1rem 2rem',
               fontSize: '1rem',
@@ -179,22 +204,22 @@ export default function Home() {
               background: buttonBg,
               border: 'none',
               borderRadius: '8px',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.6 : 1,
+              cursor: (loading || isCreating) ? 'not-allowed' : 'pointer',
+              opacity: (loading || isCreating) ? 0.6 : 1,
               transition: 'opacity 0.2s',
             }}
             onMouseEnter={(e) => {
-              if (!loading) {
+              if (!loading && !isCreating) {
                 e.currentTarget.style.opacity = '0.9'
               }
             }}
             onMouseLeave={(e) => {
-              if (!loading) {
+              if (!loading && !isCreating) {
                 e.currentTarget.style.opacity = '1'
               }
             }}
           >
-            Shorten
+            {isCreating ? 'Shortening...' : 'Shorten'}
           </button>
         </form>
 
@@ -206,6 +231,139 @@ export default function Home() {
           }}>
             {error}
           </p>
+        )}
+
+        {/* Success: Show created link */}
+        {createdLink && (
+          <div style={{
+            maxWidth: '700px',
+            margin: '0 auto 2rem auto',
+            background: cardBg,
+            border: `1px solid ${cardBorder}`,
+            borderRadius: '12px',
+            padding: '2rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              marginBottom: '0.5rem',
+            }}>
+              <span style={{ fontSize: '1.5rem' }}>✅</span>
+              <h3 style={{
+                fontSize: '1.125rem',
+                fontWeight: '600',
+                color: textColor,
+                margin: 0,
+              }}>
+                Link shortened successfully!
+              </h3>
+            </div>
+            
+            <div style={{
+              display: 'flex',
+              gap: '0.75rem',
+              alignItems: 'center',
+            }}>
+              <input
+                type="text"
+                value={createdLink.short_url}
+                readOnly
+                style={{
+                  flex: 1,
+                  padding: '0.875rem 1rem',
+                  fontSize: '1rem',
+                  background: inputBg,
+                  color: textColor,
+                  border: `1px solid ${inputBorder}`,
+                  borderRadius: '8px',
+                  outline: 'none',
+                  fontFamily: 'monospace',
+                }}
+              />
+              <button
+                onClick={handleCopy}
+                style={{
+                  padding: '0.875rem 1.5rem',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  color: buttonText,
+                  background: buttonBg,
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  transition: 'opacity 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.opacity = '0.9'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.opacity = '1'
+                }}
+              >
+                Copy
+              </button>
+              <button
+                onClick={() => navigate(`/links/${createdLink.id}/stats`)}
+                style={{
+                  padding: '0.875rem 1.5rem',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  color: textColor,
+                  background: 'transparent',
+                  border: `1px solid ${borderColor}`,
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  transition: 'background-color 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = bgSecondary
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent'
+                }}
+              >
+                View Stats
+              </button>
+            </div>
+            
+            <div style={{
+              fontSize: '0.875rem',
+              color: textSecondary,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+            }}>
+              <span>Original URL:</span>
+              <a
+                href={createdLink.target_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  color: '#3b82f6',
+                  textDecoration: 'none',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  maxWidth: '500px',
+                  display: 'inline-block',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.textDecoration = 'underline'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.textDecoration = 'none'
+                }}
+              >
+                {createdLink.target_url}
+              </a>
+            </div>
+          </div>
         )}
 
         {/* Feature Highlights */}
