@@ -1,10 +1,14 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth, useTheme } from '@/contexts'
 
 export default function Navbar() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { isAuthenticated, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
+  
+  // Hide Features/About/FAQ links on dashboard and link stats pages
+  const isDashboardPage = location.pathname === '/dashboard' || location.pathname.startsWith('/links/')
 
   const bgColor = theme === 'dark' ? '#111827' : '#ffffff'
   const textColor = theme === 'dark' ? '#f9fafb' : '#111827'
@@ -60,66 +64,68 @@ export default function Navbar() {
         <span>LinkShort</span>
       </div>
       
-      <nav style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '2rem',
-        position: 'absolute',
-        left: '50%',
-        transform: 'translateX(-50%)',
-      }}>
-        <a
-          href="#features"
-          onClick={(e) => {
-            e.preventDefault()
-            handleNavClick('features')
-          }}
-          style={{
-            color: textSecondary,
-            textDecoration: 'none',
-            fontSize: '0.875rem',
-            fontWeight: '500',
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.color = textColor}
-          onMouseLeave={(e) => e.currentTarget.style.color = textSecondary}
-        >
-          Features
-        </a>
-        <a
-          href="#about"
-          onClick={(e) => {
-            e.preventDefault()
-            handleNavClick('about')
-          }}
-          style={{
-            color: textSecondary,
-            textDecoration: 'none',
-            fontSize: '0.875rem',
-            fontWeight: '500',
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.color = textColor}
-          onMouseLeave={(e) => e.currentTarget.style.color = textSecondary}
-        >
-          About
-        </a>
-        <a
-          href="#faq"
-          onClick={(e) => {
-            e.preventDefault()
-            handleNavClick('faq')
-          }}
-          style={{
-            color: textSecondary,
-            textDecoration: 'none',
-            fontSize: '0.875rem',
-            fontWeight: '500',
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.color = textColor}
-          onMouseLeave={(e) => e.currentTarget.style.color = textSecondary}
-        >
-          FAQ
-        </a>
-      </nav>
+      {!isDashboardPage && (
+        <nav style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '2rem',
+          position: 'absolute',
+          left: '50%',
+          transform: 'translateX(-50%)',
+        }}>
+          <a
+            href="#features"
+            onClick={(e) => {
+              e.preventDefault()
+              handleNavClick('features')
+            }}
+            style={{
+              color: textSecondary,
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.color = textColor}
+            onMouseLeave={(e) => e.currentTarget.style.color = textSecondary}
+          >
+            Features
+          </a>
+          <a
+            href="#about"
+            onClick={(e) => {
+              e.preventDefault()
+              handleNavClick('about')
+            }}
+            style={{
+              color: textSecondary,
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.color = textColor}
+            onMouseLeave={(e) => e.currentTarget.style.color = textSecondary}
+          >
+            About
+          </a>
+          <a
+            href="#faq"
+            onClick={(e) => {
+              e.preventDefault()
+              handleNavClick('faq')
+            }}
+            style={{
+              color: textSecondary,
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.color = textColor}
+            onMouseLeave={(e) => e.currentTarget.style.color = textSecondary}
+          >
+            FAQ
+          </a>
+        </nav>
+      )}
 
       <div style={{
         display: 'flex',
@@ -188,28 +194,30 @@ export default function Navbar() {
           </>
         ) : (
           <>
-            <button
-              onClick={() => navigate('/dashboard')}
-              style={{
-                padding: '0.5rem 1.5rem',
-                background: 'transparent',
-                border: `1px solid ${borderColor}`,
-                color: textColor,
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                transition: 'background-color 0.2s, border-color 0.3s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = bgSecondary
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent'
-              }}
-            >
-              Dashboard
-            </button>
+            {!isDashboardPage && (
+              <button
+                onClick={() => navigate('/dashboard')}
+                style={{
+                  padding: '0.5rem 1.5rem',
+                  background: 'transparent',
+                  border: `1px solid ${borderColor}`,
+                  color: textColor,
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s, border-color 0.3s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = bgSecondary
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent'
+                }}
+              >
+                Dashboard
+              </button>
+            )}
             <button
               onClick={logout}
               style={{

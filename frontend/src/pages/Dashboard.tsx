@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ProtectedRoute, Navbar } from '@/components'
 import { useTheme, useToast } from '@/contexts'
+import UrlInput from '@/components/UrlInput'
 import KPICardsRow from '@/components/dashboard/KPICardsRow'
 import CountryMapCard from '@/components/dashboard/CountryMapCard'
 import LinksTable from '@/components/dashboard/LinksTable'
@@ -98,6 +99,7 @@ function DashboardContent() {
   const [creatingLink, setCreatingLink] = useState(false)
   const [createLinkError, setCreateLinkError] = useState<string | null>(null)
   const [createLinkSuccess, setCreateLinkSuccess] = useState<string | null>(null)
+  const [isUrlValid, setIsUrlValid] = useState(false)
 
   const bgColor = theme === 'dark' ? '#111827' : '#f9fafb'
   const textColor = theme === 'dark' ? '#f9fafb' : '#111827'
@@ -195,8 +197,7 @@ function DashboardContent() {
     }
   }
 
-  const handleCreateLink = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const createLinkHandler = async () => {
     setCreateLinkError(null)
     setCreateLinkSuccess(null)
 
@@ -238,6 +239,11 @@ function DashboardContent() {
     } finally {
       setCreatingLink(false)
     }
+  }
+
+  const handleCreateLink = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await createLinkHandler()
   }
 
   return (
@@ -327,68 +333,37 @@ function DashboardContent() {
               }}>
                 Create New Short Link
               </h2>
-              <form onSubmit={handleCreateLink} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-                <div style={{ flex: 1 }}>
-                  <input
-                    type="text"
+              <form onSubmit={handleCreateLink} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                  <UrlInput
                     value={newLinkUrl}
-                    onChange={(e) => setNewLinkUrl(e.target.value)}
+                    onChange={(value) => {
+                      setNewLinkUrl(value)
+                      setCreateLinkError(null)
+                    }}
+                    onValidationChange={setIsUrlValid}
+                    onSubmit={createLinkHandler}
                     placeholder="Enter URL to shorten (e.g., https://example.com)"
                     disabled={creatingLink}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem 1rem',
-                      fontSize: '0.875rem',
-                      background: inputBg,
-                      border: `1px solid ${createLinkError ? '#ef4444' : inputBorder}`,
-                      borderRadius: '6px',
-                      color: textColor,
-                      transition: 'background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease',
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = buttonBg
-                      e.target.style.outline = 'none'
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = createLinkError ? '#ef4444' : inputBorder
-                    }}
+                    showValidation={true}
                   />
-                  {createLinkError && (
-                    <p style={{
-                      margin: '0.5rem 0 0 0',
-                      fontSize: '0.875rem',
-                      color: '#ef4444',
-                    }}>
-                      {createLinkError}
-                    </p>
-                  )}
-                  {createLinkSuccess && (
-                    <p style={{
-                      margin: '0.5rem 0 0 0',
-                      fontSize: '0.875rem',
-                      color: '#10b981',
-                    }}>
-                      {createLinkSuccess}
-                    </p>
-                  )}
-                </div>
-                <button
-                  type="submit"
-                  disabled={creatingLink || !newLinkUrl.trim()}
-                  style={{
-                    padding: '0.75rem 1.5rem',
+                  <button
+                    type="submit"
+                    disabled={creatingLink || !isUrlValid}
+                    style={{
+                      padding: '0.75rem 1.5rem',
                     fontSize: '0.875rem',
                     fontWeight: '500',
-                    background: creatingLink || !newLinkUrl.trim() ? '#9ca3af' : buttonBg,
+                    background: creatingLink || !isUrlValid ? '#9ca3af' : buttonBg,
                     color: buttonText,
                     border: 'none',
                     borderRadius: '6px',
-                    cursor: creatingLink || !newLinkUrl.trim() ? 'not-allowed' : 'pointer',
+                    cursor: creatingLink || !isUrlValid ? 'not-allowed' : 'pointer',
                     transition: 'background-color 0.2s, opacity 0.2s',
                     whiteSpace: 'nowrap',
                   }}
                   onMouseEnter={(e) => {
-                    if (!creatingLink && newLinkUrl.trim()) {
+                    if (!creatingLink && isUrlValid) {
                       e.currentTarget.style.opacity = '0.9'
                     }
                   }}
@@ -398,6 +373,16 @@ function DashboardContent() {
                 >
                   {creatingLink ? 'Creating...' : 'Shorten Link'}
                 </button>
+                </div>
+                {createLinkError && (
+                  <p style={{
+                    margin: 0,
+                    fontSize: '0.875rem',
+                    color: '#ef4444',
+                  }}>
+                    {createLinkError}
+                  </p>
+                )}
               </form>
             </div>
 

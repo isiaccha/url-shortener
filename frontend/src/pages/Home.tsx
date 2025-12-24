@@ -2,6 +2,7 @@ import { useState, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth, useTheme, useToast } from '@/contexts'
 import Navbar from '@/components/Navbar'
+import UrlInput from '@/components/UrlInput'
 import { createLink } from '@/api/links'
 import type { LinkResponse } from '@/types/api'
 
@@ -14,6 +15,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [createdLink, setCreatedLink] = useState<LinkResponse | null>(null)
+  const [isUrlValid, setIsUrlValid] = useState(false)
 
   const validateUrl = (urlString: string): boolean => {
     try {
@@ -42,6 +44,14 @@ export default function Home() {
     }
 
     if (!validateUrl(urlToShorten)) {
+      setError('Please enter a valid URL')
+      return
+    }
+    
+    // Check if URL is valid before proceeding
+    try {
+      new URL(urlToShorten)
+    } catch {
       setError('Please enter a valid URL')
       return
     }
@@ -166,65 +176,57 @@ export default function Home() {
         {/* URL Input Form */}
         <form onSubmit={handleSubmit} style={{
           display: 'flex',
+          flexDirection: 'column',
           gap: '1rem',
           marginBottom: '1rem',
           maxWidth: '700px',
           margin: '0 auto 1rem auto',
         }}>
-          <input
-            type="text"
-            value={url}
-            onChange={(e) => {
-              setUrl(e.target.value)
-              setError(null)
-            }}
-            placeholder="Enter your long URL here..."
-            style={{
-              flex: 1,
-              padding: '1rem 1.5rem',
-              fontSize: '1rem',
-              background: inputBg,
-              color: textColor,
-              border: error ? '2px solid #ef4444' : `2px solid ${inputBorder}`,
-              borderRadius: '8px',
-              outline: 'none',
-              transition: 'border-color 0.2s, background-color 0.3s, color 0.3s',
-            }}
-            onFocus={(e) => {
-              e.currentTarget.style.borderColor = '#3b82f6'
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = error ? '#ef4444' : inputBorder
-            }}
-          />
-          <button
-            type="submit"
-            disabled={loading || isCreating}
-            style={{
-              padding: '1rem 2rem',
-              fontSize: '1rem',
-              fontWeight: '600',
-              color: buttonText,
-              background: buttonBg,
-              border: 'none',
-              borderRadius: '8px',
-              cursor: (loading || isCreating) ? 'not-allowed' : 'pointer',
-              opacity: (loading || isCreating) ? 0.6 : 1,
-              transition: 'opacity 0.2s',
-            }}
-            onMouseEnter={(e) => {
-              if (!loading && !isCreating) {
-                e.currentTarget.style.opacity = '0.9'
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!loading && !isCreating) {
-                e.currentTarget.style.opacity = '1'
-              }
-            }}
-          >
-            {isCreating ? 'Shortening...' : 'Shorten'}
-          </button>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+            <UrlInput
+              value={url}
+              onChange={(value) => {
+                setUrl(value)
+                setError(null)
+              }}
+              onValidationChange={setIsUrlValid}
+              onSubmit={handleSubmit}
+              placeholder="Enter your long URL here..."
+              disabled={loading || isCreating}
+              showValidation={true}
+            />
+            <button
+              type="submit"
+              disabled={loading || isCreating || !isUrlValid}
+              style={{
+                padding: '1rem 2rem',
+                fontSize: '1rem',
+                fontWeight: '600',
+                color: buttonText,
+                background: buttonBg,
+                border: 'none',
+                borderRadius: '8px',
+                cursor: (loading || isCreating || !isUrlValid) ? 'not-allowed' : 'pointer',
+                opacity: (loading || isCreating || !isUrlValid) ? 0.6 : 1,
+                transition: 'opacity 0.2s',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+                height: 'fit-content',
+              }}
+              onMouseEnter={(e) => {
+                if (!loading && !isCreating && isUrlValid) {
+                  e.currentTarget.style.opacity = '0.9'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!loading && !isCreating && isUrlValid) {
+                  e.currentTarget.style.opacity = '1'
+                }
+              }}
+            >
+              {isCreating ? 'Shortening...' : 'Shorten'}
+            </button>
+          </div>
         </form>
 
         {error && (
@@ -232,6 +234,8 @@ export default function Home() {
             marginBottom: '2rem',
             fontSize: '0.875rem',
             color: '#ef4444',
+            maxWidth: '700px',
+            margin: '0 auto 2rem auto',
           }}>
             {error}
           </p>

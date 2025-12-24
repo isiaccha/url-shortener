@@ -67,6 +67,14 @@ apiClient.interceptors.response.use(
 
     // Handle 401 Unauthorized - redirect to login if not already redirecting
     if (error.response.status === 401) {
+      // Don't redirect for /auth/me endpoint - this is expected when checking auth status
+      const isAuthCheck = originalRequest?.url?.includes('/auth/me')
+      
+      if (isAuthCheck) {
+        // Silently reject for auth check - this is expected behavior
+        return Promise.reject(error)
+      }
+      
       // Don't redirect if we're already on login page or if we're already redirecting
       if (!isRedirecting && !window.location.pathname.includes('/login') && !window.location.pathname.includes('/auth/callback')) {
         isRedirecting = true
