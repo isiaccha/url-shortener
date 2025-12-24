@@ -10,7 +10,7 @@ const PRESETS: { value: DateRangePreset; label: string }[] = [
   { value: '24h', label: '24h' },
   { value: '7d', label: '7d' },
   { value: '30d', label: '30d' },
-  { value: '12mo', label: '12mo' },
+  { value: 'all', label: 'All Time' },
 ]
 
 export default function DateRangeSelector({ value, onChange }: DateRangeSelectorProps) {
@@ -36,8 +36,9 @@ export default function DateRangeSelector({ value, onChange }: DateRangeSelector
       case '30d':
         start.setDate(now.getDate() - 30)
         break
-      case '12mo':
-        start.setMonth(now.getMonth() - 12)
+      case 'all':
+        // All time - set start date to 10 years ago to capture all data
+        start.setFullYear(now.getFullYear() - 10)
         break
     }
 

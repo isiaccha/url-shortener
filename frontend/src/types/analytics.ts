@@ -1,6 +1,6 @@
 // Analytics Types
 
-export type DateRangePreset = '24h' | '7d' | '30d' | '12mo' | 'custom'
+export type DateRangePreset = '24h' | '7d' | '30d' | 'all' | 'custom'
 
 export interface DateRange {
   start: Date
