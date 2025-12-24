@@ -212,6 +212,37 @@ def get_unique_visitors_per_link(
     return {row.link_id: int(row.unique_count) for row in results}
 
 
+def get_unique_visitors_for_link(
+    db: Session, *, link_id: int, start_date: datetime | None = None, end_date: datetime | None = None
+) -> int:
+    """Get unique visitor count for a single link."""
+    stmt = (
+        select(func.count(distinct(ClickEvent.visitor_hash)))
+        .where(
+            ClickEvent.link_id == link_id,
+            ClickEvent.visitor_hash.isnot(None),
+        )
+    )
+    
+    if start_date:
+        # Ensure UTC for consistent comparison
+        if start_date.tzinfo is not None:
+            start_date_utc = start_date.astimezone(timezone.utc)
+        else:
+            start_date_utc = start_date.replace(tzinfo=timezone.utc)
+        stmt = stmt.where(ClickEvent.clicked_at >= start_date_utc)
+    if end_date:
+        # Ensure UTC for consistent comparison
+        if end_date.tzinfo is not None:
+            end_date_utc = end_date.astimezone(timezone.utc)
+        else:
+            end_date_utc = end_date.replace(tzinfo=timezone.utc)
+        stmt = stmt.where(ClickEvent.clicked_at <= end_date_utc)
+    
+    result = db.execute(stmt).scalar()
+    return int(result) if result else 0
+
+
 def get_clicks_by_country(
     db: Session, *, user_id: int, start_date: datetime | None = None, end_date: datetime | None = None
 ) -> list[dict[str, int]]:

@@ -48,6 +48,7 @@ export interface ClickEventItem {
 export interface LinkStatsResponse {
   link: LinkListItem
   clicks_last_24h: number
+  unique_visitors: number
   recent_clicks: ClickEventItem[]
 }
 

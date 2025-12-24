@@ -15,7 +15,7 @@ from src.links.schemas import (
 from src.links.service import (
     create_link, list_links_for_user, get_link_for_user, count_clicks_last_24h, recent_click_events,
     get_total_clicks_for_user, get_total_links_for_user, get_unique_visitors_for_user,
-    get_unique_visitors_per_link, get_clicks_by_country, get_clicks_time_series,
+    get_unique_visitors_per_link, get_unique_visitors_for_link, get_clicks_by_country, get_clicks_time_series,
     get_previous_period_metrics, update_link_status
 )
 from src.links.country_names import get_country_name
@@ -86,6 +86,7 @@ def link_stats(
 
     base = str(request.base_url).rstrip("/")
     clicks_24h = count_clicks_last_24h(db, link_id=link.id)
+    unique_visitors = get_unique_visitors_for_link(db, link_id=link.id)
     recent = recent_click_events(db, link_id=link.id, limit=50)
 
     return LinkStatsResponse(
@@ -100,6 +101,7 @@ def link_stats(
             short_url=f"{base}/{link.slug}",
         ),
         clicks_last_24h=clicks_24h,
+        unique_visitors=unique_visitors,
         recent_clicks=[
             ClickEventItem(
                 id=e.id,

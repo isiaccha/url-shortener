@@ -51,6 +51,7 @@ class ClickEventItem(BaseModel):
 class LinkStatsResponse(BaseModel):
     link: LinkListItem
     clicks_last_24h: int
+    unique_visitors: int
     recent_clicks: list[ClickEventItem]
 
 
