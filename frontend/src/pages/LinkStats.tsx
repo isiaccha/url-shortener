@@ -26,7 +26,6 @@ function LinkStatsContent() {
   const cardBg = theme === 'dark' ? '#1f2937' : '#ffffff'
   const buttonBg = theme === 'dark' ? '#3b82f6' : '#2563eb'
   const buttonText = '#ffffff'
-  const hoverBg = theme === 'dark' ? '#374151' : '#f9fafb'
 
   useEffect(() => {
     const fetchStats = async () => {

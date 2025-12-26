@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider, ThemeProvider, ToastProvider } from './contexts'
 import { Home, Login, AuthCallback, Dashboard, LinkStats } from './pages'
-import { ProtectedRoute } from './components'
 
 function App() {
   return (

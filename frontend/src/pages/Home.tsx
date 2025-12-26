@@ -9,8 +9,8 @@ import type { LinkResponse } from '@/types/api'
 
 export default function Home() {
   const navigate = useNavigate()
-  const { isAuthenticated, loading, user, logout } = useAuth()
-  const { theme, toggleTheme } = useTheme()
+  const { isAuthenticated, loading } = useAuth()
+  const { theme } = useTheme()
   const { showSuccess, showError } = useToast()
   const [url, setUrl] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -81,13 +81,6 @@ export default function Home() {
     }
   }
 
-  const handleUrlInputSubmit = () => {
-    // Create a synthetic event to trigger form submission
-    const syntheticEvent = {
-      preventDefault: () => {},
-    } as FormEvent
-    handleSubmit(syntheticEvent)
-  }
 
   const handleCopy = async () => {
     if (!createdLink?.short_url) return

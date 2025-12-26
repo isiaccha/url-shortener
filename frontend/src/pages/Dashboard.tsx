@@ -98,15 +98,12 @@ function DashboardContent() {
   const [newLinkUrl, setNewLinkUrl] = useState('')
   const [creatingLink, setCreatingLink] = useState(false)
   const [createLinkError, setCreateLinkError] = useState<string | null>(null)
-  const [createLinkSuccess, setCreateLinkSuccess] = useState<string | null>(null)
   const [isUrlValid, setIsUrlValid] = useState(false)
 
   const bgColor = theme === 'dark' ? '#111827' : '#f9fafb'
   const textColor = theme === 'dark' ? '#f9fafb' : '#111827'
   const textSecondary = theme === 'dark' ? '#d1d5db' : '#6b7280'
   const borderColor = theme === 'dark' ? '#374151' : '#e5e7eb'
-  const inputBg = theme === 'dark' ? '#1f2937' : '#ffffff'
-  const inputBorder = theme === 'dark' ? '#4b5563' : '#e5e7eb'
   const buttonBg = theme === 'dark' ? '#3b82f6' : '#2563eb'
   const buttonText = '#ffffff'
   const cardBg = theme === 'dark' ? '#1f2937' : '#ffffff'
@@ -199,7 +196,6 @@ function DashboardContent() {
 
   const createLinkHandler = async () => {
     setCreateLinkError(null)
-    setCreateLinkSuccess(null)
 
     if (!newLinkUrl.trim()) {
       setCreateLinkError('Please enter a URL')

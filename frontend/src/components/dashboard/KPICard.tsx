@@ -8,7 +8,7 @@ interface KPICardProps {
 
 export default function KPICard({ data }: KPICardProps) {
   const { theme } = useTheme()
-  const { title, value, previousValue, delta, sparklineData, trend } = data
+  const { title, value, delta, sparklineData, trend } = data
 
   const bgColor = theme === 'dark' ? '#1f2937' : '#ffffff'
   const textColor = theme === 'dark' ? '#f9fafb' : '#111827'
