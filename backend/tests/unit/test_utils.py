@@ -90,12 +90,16 @@ class TestGetClientIP:
         request = Mock()
         request.client = Mock()
         request.client.host = "192.168.1.100"
+        request.headers = Mock()
+        request.headers.get = Mock(return_value=None)  # No X-Forwarded-For header
         assert get_client_ip(request) == "192.168.1.100"
     
     def test_client_is_none(self):
         """Test when request.client is None."""
         request = Mock()
         request.client = None
+        request.headers = Mock()
+        request.headers.get = Mock(return_value=None)  # No X-Forwarded-For header
         assert get_client_ip(request) is None
     
     def test_ipv6_address(self):
@@ -103,7 +107,27 @@ class TestGetClientIP:
         request = Mock()
         request.client = Mock()
         request.client.host = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+        request.headers = Mock()
+        request.headers.get = Mock(return_value=None)  # No X-Forwarded-For header
         assert get_client_ip(request) == "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+    
+    def test_x_forwarded_for_header(self):
+        """Test when X-Forwarded-For header is present."""
+        request = Mock()
+        request.client = Mock()
+        request.client.host = "192.168.1.100"
+        request.headers = Mock()
+        request.headers.get = Mock(return_value="203.0.113.1, 198.51.100.1")
+        assert get_client_ip(request) == "203.0.113.1"
+    
+    def test_x_forwarded_for_single_ip(self):
+        """Test when X-Forwarded-For header has single IP."""
+        request = Mock()
+        request.client = Mock()
+        request.client.host = "192.168.1.100"
+        request.headers = Mock()
+        request.headers.get = Mock(return_value="203.0.113.1")
+        assert get_client_ip(request) == "203.0.113.1"
 
 
 class TestMakeVisitorHash:

@@ -29,7 +29,7 @@ def get_client_ip(request: Request) -> str | None:
     """
     # Check X-Forwarded-For header (used by Railway and most proxies)
     forwarded_for = request.headers.get("X-Forwarded-For")
-    if forwarded_for:
+    if forwarded_for and isinstance(forwarded_for, str):
         # X-Forwarded-For can contain multiple IPs: "client, proxy1, proxy2"
         # Take the first one (original client)
         ip = forwarded_for.split(",")[0].strip()
