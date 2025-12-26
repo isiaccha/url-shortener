@@ -17,16 +17,22 @@ import src.models.click_event
 app = FastAPI(debug=settings.debug)
 
 # CORS middleware - must be added before SessionMiddleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
+# Build CORS origins list: use frontend_url from settings, plus localhost for local dev
+cors_origins = [settings.frontend_url]
+if settings.app_env == "local":
+    # Add common localhost ports for development
+    cors_origins.extend([
         "http://localhost:5173",
         "http://localhost:5174",
         "http://localhost:5175",
         "http://127.0.0.1:5173",
         "http://127.0.0.1:5174",
         "http://127.0.0.1:5175",
-    ],
+    ])
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins,
     allow_credentials=True,  # Required for session cookies
     allow_methods=["*"],  # Allow all methods (GET, POST, etc.)
     allow_headers=["*"],  # Allow all headers
