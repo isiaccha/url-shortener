@@ -24,9 +24,19 @@ def get_ua_raw(request: Request) -> str | None:
 
 def get_client_ip(request: Request) -> str | None:
     """
-    MVP version: uses direct client host.
-    If you deploy behind a proxy, you’ll later adapt this to trusted X-Forwarded-For.
+    Get client IP address, handling proxies (Railway, Cloudflare, etc.).
+    Checks X-Forwarded-For header first, then falls back to direct client host.
     """
+    # Check X-Forwarded-For header (used by Railway and most proxies)
+    forwarded_for = request.headers.get("X-Forwarded-For")
+    if forwarded_for:
+        # X-Forwarded-For can contain multiple IPs: "client, proxy1, proxy2"
+        # Take the first one (original client)
+        ip = forwarded_for.split(",")[0].strip()
+        if ip:
+            return ip
+    
+    # Fallback to direct client host (for local development)
     if request.client is None:
         return None
     return request.client.host
