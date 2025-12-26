@@ -42,8 +42,8 @@ app.add_middleware(
     SessionMiddleware,
     secret_key=settings.session_secret_key,
     max_age=settings.session_expire_minutes * 60,
-    same_site="lax",  # "lax" allows cookies on top-level navigations (like OAuth redirects)
-    https_only=settings.app_env == "production",
+    same_site="none" if settings.app_env == "production" else "lax",  # "none" required for cross-site cookies in production
+    https_only=settings.app_env == "production",  # Required when same_site="none"
 )
 
 
