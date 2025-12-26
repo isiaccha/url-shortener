@@ -1,4 +1,5 @@
-import { useState, FormEvent } from 'react'
+import { useState } from 'react'
+import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth, useTheme, useToast } from '@/contexts'
 import Navbar from '@/components/Navbar'
@@ -78,6 +79,14 @@ export default function Home() {
     } finally {
       setIsCreating(false)
     }
+  }
+
+  const handleUrlInputSubmit = () => {
+    // Create a synthetic event to trigger form submission
+    const syntheticEvent = {
+      preventDefault: () => {},
+    } as FormEvent
+    handleSubmit(syntheticEvent)
   }
 
   const handleCopy = async () => {
@@ -190,7 +199,6 @@ export default function Home() {
                 setError(null)
               }}
               onValidationChange={setIsUrlValid}
-              onSubmit={handleSubmit}
               placeholder="Enter your long URL here..."
               disabled={loading || isCreating}
               showValidation={true}
@@ -424,6 +432,36 @@ export default function Home() {
               fontSize: '2.5rem',
               lineHeight: 1,
             }}>
+              ⚡
+            </div>
+            <h3 style={{
+              fontSize: '1rem',
+              fontWeight: '600',
+              color: textColor,
+              margin: 0,
+            }}>
+              Lightning Fast
+            </h3>
+            <p style={{
+              fontSize: '0.875rem',
+              color: textSecondary,
+              margin: 0,
+            }}>
+              Quick and reliable redirects for your shortened links, keeping your audience engaged.
+            </p>
+          </div>
+
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+            gap: '0.75rem',
+          }}>
+            <div style={{
+              fontSize: '2.5rem',
+              lineHeight: 1,
+            }}>
               🛡️
             </div>
             <h3 style={{
@@ -439,37 +477,7 @@ export default function Home() {
               color: textSecondary,
               margin: 0,
             }}>
-              Enterprise-grade security with 99.9% uptime SLA. Your links are safe and always available.
-            </p>
-          </div>
-
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            textAlign: 'center',
-            gap: '0.75rem',
-          }}>
-            <div style={{
-              fontSize: '2.5rem',
-              lineHeight: 1,
-            }}>
-              🔗
-            </div>
-            <h3 style={{
-              fontSize: '1rem',
-              fontWeight: '600',
-              color: textColor,
-              margin: 0,
-            }}>
-              Custom Links
-            </h3>
-            <p style={{
-              fontSize: '0.875rem',
-              color: textSecondary,
-              margin: 0,
-            }}>
-              Create branded short links with custom domains to strengthen your brand identity.
+              Your links are secure and reliable. Activate or deactivate links as needed to control access.
             </p>
           </div>
         </div>
@@ -536,7 +544,7 @@ export default function Home() {
               margin: 0,
               lineHeight: '1.6',
             }}>
-              Track clicks, understand your audience with detailed user agent data, device types, and geographic information.
+              Track clicks, unique visitors, and understand your audience with detailed device types, browser information, operating systems, and geographic data.
             </p>
           </div>
 
@@ -569,11 +577,11 @@ export default function Home() {
               margin: 0,
               lineHeight: '1.6',
             }}>
-              Our global CDN ensures your shortened links redirect users in milliseconds, anywhere in the world.
+              Quick and reliable redirects for your shortened links, keeping your audience engaged without delays.
             </p>
           </div>
 
-          {/* Custom Links */}
+          {/* Link Management */}
           <div style={{
             background: cardBg,
             border: `1px solid ${cardBorder}`,
@@ -594,7 +602,7 @@ export default function Home() {
               margin: 0,
               marginBottom: '0.75rem',
             }}>
-              Custom Links
+              Link Management
             </h3>
             <p style={{
               fontSize: '0.875rem',
@@ -602,7 +610,7 @@ export default function Home() {
               margin: 0,
               lineHeight: '1.6',
             }}>
-              Create branded short links with custom domains to strengthen your brand identity.
+              Easily manage all your links in one place. View your dashboard, track performance, and activate or deactivate links as needed.
             </p>
           </div>
 
@@ -635,11 +643,11 @@ export default function Home() {
               margin: 0,
               lineHeight: '1.6',
             }}>
-              Enterprise-grade security with 99.9% uptime SLA. Your links are safe and always available.
+              Your links are secure and reliable. Activate or deactivate links as needed to control access to your content.
             </p>
           </div>
 
-          {/* Global Reach */}
+          {/* Geographic Insights */}
           <div style={{
             background: cardBg,
             border: `1px solid ${cardBorder}`,
@@ -660,7 +668,7 @@ export default function Home() {
               margin: 0,
               marginBottom: '0.75rem',
             }}>
-              Global Reach
+              Geographic Insights
             </h3>
             <p style={{
               fontSize: '0.875rem',
@@ -668,11 +676,11 @@ export default function Home() {
               margin: 0,
               lineHeight: '1.6',
             }}>
-              Reach audiences worldwide with geographically optimized redirects and multilingual support.
+              Understand where your audience is located with geographic analytics showing clicks and visitors by country.
             </p>
           </div>
 
-          {/* Team Collaboration */}
+          {/* Dashboard Analytics */}
           <div style={{
             background: cardBg,
             border: `1px solid ${cardBorder}`,
@@ -684,7 +692,7 @@ export default function Home() {
               fontSize: '2.5rem',
               marginBottom: '1rem',
             }}>
-              👥
+              📈
             </div>
             <h3 style={{
               fontSize: '1.25rem',
@@ -693,7 +701,7 @@ export default function Home() {
               margin: 0,
               marginBottom: '0.75rem',
             }}>
-              Team Collaboration
+              Dashboard Analytics
             </h3>
             <p style={{
               fontSize: '0.875rem',
@@ -701,7 +709,7 @@ export default function Home() {
               margin: 0,
               lineHeight: '1.6',
             }}>
-              Work together with your team to manage, organize, and analyze your links in one place.
+              Get insights at a glance with comprehensive dashboards showing KPIs, time-series charts, and detailed link performance metrics.
             </p>
           </div>
         </div>
@@ -885,7 +893,7 @@ export default function Home() {
               margin: 0,
               lineHeight: '1.6',
             }}>
-              Yes! You can create custom slugs for your links to make them more memorable and branded. Custom links help strengthen your brand identity.
+              Links are automatically generated with short, unique slugs. Custom slugs are not currently available.
             </p>
           </div>
 
@@ -910,7 +918,7 @@ export default function Home() {
               margin: 0,
               lineHeight: '1.6',
             }}>
-              Yes, LinkShort offers a free tier with all essential features. Sign up to start shortening links and tracking analytics today.
+              Yes, LinkShort is completely free to use. Sign up to start shortening links and tracking analytics today.
             </p>
           </div>
 
