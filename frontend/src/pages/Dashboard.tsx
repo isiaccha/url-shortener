@@ -8,7 +8,7 @@ import CountryMapCard from '@/components/dashboard/CountryMapCard'
 import LinksTable from '@/components/dashboard/LinksTable'
 import DateRangeSelector from '@/components/dashboard/DateRangeSelector'
 import { KPICardSkeleton, TableSkeleton, CardSkeleton } from '@/components/LoadingSkeleton'
-import { getDashboardData, updateLinkStatus, createLink } from '@/api/links'
+import { getDashboardData, updateLinkStatus, createLink, deleteLink } from '@/api/links'
 import type { DateRange, KPIData, CountryData, LinkTableRow } from '@/types/analytics'
 import type { DashboardResponse } from '@/types/api'
 
@@ -134,9 +134,6 @@ function DashboardContent() {
     fetchData()
   }, [dateRange])
 
-  // Filter out deleted links from display
-  const visibleLinks = links.filter(link => !link.deleted)
-  
   const totalClicks = countries.reduce((sum, c) => sum + c.clicks, 0)
 
   const handleLinkClick = (linkId: number) => {
@@ -175,14 +172,24 @@ function DashboardContent() {
     }
   }
 
-  const handleDelete = (linkId: number) => {
-    // Soft delete - only mark as deleted, don't remove from array
-    // This removes from user view but keeps in DB
-    setLinks(prevLinks =>
-      prevLinks.map(link =>
-        link.id === linkId ? { ...link, deleted: true } : link
-      )
-    )
+  const handleDelete = async (linkId: number) => {
+    try {
+      await deleteLink(linkId)
+      showSuccess('Link deleted successfully')
+      
+      // Refresh dashboard data to reflect the deletion
+      const startDate = dateRange.start.toISOString()
+      const endDate = dateRange.end.toISOString()
+      const data = await getDashboardData(startDate, endDate)
+      
+      setKpis(transformKPIs(data))
+      setCountries(transformCountries(data))
+      setLinks(transformLinks(data))
+    } catch (err) {
+      console.error('Failed to delete link:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete link'
+      showError(errorMessage)
+    }
   }
 
   const validateUrl = (urlString: string): boolean => {
@@ -384,7 +391,7 @@ function DashboardContent() {
 
             {/* Links Table */}
             <LinksTable 
-              links={visibleLinks} 
+              links={links} 
               onRowClick={handleLinkClick}
               onActivate={handleActivate}
               onDeactivate={handleDeactivate}

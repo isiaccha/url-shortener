@@ -39,7 +39,6 @@ export interface LinkTableRow {
   uniqueVisitors: number
   lastClicked: string | null // ISO datetime
   created: string // ISO datetime
-  deleted?: boolean // Soft delete flag - removes from user view but not from DB
 }
 
 export interface DashboardFilters {

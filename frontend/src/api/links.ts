@@ -69,3 +69,10 @@ export const updateLinkStatus = async (
   return response.data
 }
 
+/**
+ * Delete a link
+ */
+export const deleteLink = async (linkId: number): Promise<void> => {
+  await apiClient.delete(`/api/links/${linkId}`)
+}
+

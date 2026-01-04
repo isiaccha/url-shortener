@@ -421,3 +421,18 @@ def update_link_status(db: Session, *, user_id: int, link_id: int, is_active: bo
     db.refresh(link)
     return link
 
+
+def delete_link(db: Session, *, user_id: int, link_id: int) -> bool:
+    """
+    Delete a link. Returns True if deleted, False if not found.
+    Note: This performs a hard delete - the link and all associated click events will be deleted
+    due to CASCADE delete constraints.
+    """
+    link = get_link_for_user(db, user_id=user_id, link_id=link_id)
+    if not link:
+        return False
+    
+    db.delete(link)
+    db.commit()
+    return True
+

@@ -16,7 +16,7 @@ from src.links.service import (
     create_link, list_links_for_user, get_link_for_user, count_clicks_last_24h, recent_click_events,
     get_total_clicks_for_user, get_total_links_for_user, get_unique_visitors_for_user,
     get_unique_visitors_per_link, get_unique_visitors_for_link, get_clicks_by_country, get_clicks_time_series,
-    get_previous_period_metrics, update_link_status
+    get_previous_period_metrics, update_link_status, delete_link
 )
 from src.links.country_names import get_country_name
 
@@ -249,4 +249,19 @@ def update_link_status_endpoint(
         last_clicked_at=link.last_clicked_at,
         short_url=f"{base}/{link.slug}",
     )
+
+
+@router.delete("/{link_id}")
+def delete_link_endpoint(
+    link_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Delete a link. Returns 204 No Content on success."""
+    deleted = delete_link(db, user_id=user.id, link_id=link_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Link not found")
+    
+    from starlette.responses import Response
+    return Response(status_code=204)
 
