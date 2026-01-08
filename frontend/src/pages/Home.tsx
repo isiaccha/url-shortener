@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth, useTheme, useToast } from '@/contexts'
 import Navbar from '@/components/Navbar'
 import UrlInput from '@/components/UrlInput'
+import DashboardPreview from '@/components/DashboardPreview'
 import { createLink } from '@/api/links'
 import type { LinkResponse } from '@/types/api'
 
@@ -373,6 +374,19 @@ export default function Home() {
               </a>
             </div>
           </div>
+        )}
+
+        {/* Dashboard Preview Section */}
+        {!isAuthenticated && (
+          <section style={{
+            marginTop: '6rem',
+            marginBottom: '4rem',
+            maxWidth: '1200px',
+            margin: '6rem auto 4rem auto',
+            padding: '0 2rem',
+          }}>
+            <DashboardPreview onSignUpClick={() => navigate('/login')} />
+          </section>
         )}
 
         {/* Feature Highlights */}
