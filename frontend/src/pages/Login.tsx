@@ -8,10 +8,16 @@ export default function Login() {
   const { login, isAuthenticated, loading } = useAuth()
   const { theme } = useTheme()
 
-  // Redirect to home if already authenticated
+  // Redirect to dashboard if already authenticated, or to redirect param if provided
   useEffect(() => {
     if (!loading && isAuthenticated) {
-      navigate('/')
+      const urlParams = new URLSearchParams(window.location.search)
+      const redirectTo = urlParams.get('redirect')
+      // Default to dashboard if no redirect param, or if redirect is to login/callback
+      const targetPath = redirectTo && !redirectTo.includes('/login') && !redirectTo.includes('/auth/callback')
+        ? redirectTo
+        : '/dashboard'
+      navigate(targetPath)
     }
   }, [isAuthenticated, loading, navigate])
 

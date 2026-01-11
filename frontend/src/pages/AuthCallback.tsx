@@ -42,7 +42,7 @@ export default function AuthCallback() {
   useEffect(() => {
     if (!loading && !error && user) {
       const redirectTimeout = setTimeout(() => {
-        navigate('/', { replace: true })
+        navigate('/dashboard', { replace: true })
       }, 1500)
       
       return () => clearTimeout(redirectTimeout)
@@ -51,7 +51,7 @@ export default function AuthCallback() {
     // Fallback: if checkAuth succeeded but user not set yet, redirect anyway after a delay
     if (!loading && !error && !user) {
       const redirectTimeout = setTimeout(() => {
-        navigate('/', { replace: true })
+        navigate('/dashboard', { replace: true })
       }, 2000)
       
       return () => clearTimeout(redirectTimeout)
@@ -75,10 +75,10 @@ export default function AuthCallback() {
         <h2>Authentication Error</h2>
         <p style={{ color: '#c62828' }}>{error}</p>
         <button 
-          onClick={() => navigate('/', { replace: true })}
+          onClick={() => navigate('/dashboard', { replace: true })}
           style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}
         >
-          Go to Home
+          Go to Dashboard
         </button>
       </div>
     )
@@ -90,7 +90,7 @@ export default function AuthCallback() {
       <div style={{ padding: '2rem', textAlign: 'center' }}>
         <h2>✅ Login Successful!</h2>
         <p>Welcome, {user.email}!</p>
-        <p>Redirecting to home page...</p>
+        <p>Redirecting to dashboard...</p>
       </div>
     )
   }
